@@ -1,6 +1,6 @@
 #include "wifi.h"
 #include "mqtt.h"
-#include "motor.h"
+#include "pwm_motor.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,13 +40,13 @@ void app_main() {
     nvs_flash_init();
 
     configure_led();
-    configure_motors();
+    pwm_configure_motors();
 
     init_wifi(&wifi_event_group, ssid, password);
 
-    set_motor_callback(forward_motion, "forward");
-    set_motor_callback(backward_motion, "backward");
-    set_motor_callback(stop, "stop");
+    set_motor_callback(pwm_forward_action, "forward");
+    set_motor_callback(pwm_backward_action, "backward");
+    set_motor_callback(pwm_stop_action, "stop");
 
     init_mqtt(&mqtt_client, broker_uri);
 

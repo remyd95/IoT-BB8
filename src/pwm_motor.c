@@ -21,15 +21,15 @@ static void pwm_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num)
     mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);
 }
 
-void pwm_forward_motion(motor_action_data_t motor_action_data) {
+void pwm_forward_action(motor_action_data_t motor_action_data) {
     pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.duty_cycle);
 }
 
-void pwm_backward_motion(motor_action_data_t motor_action_data) {
+void pwm_backward_action(motor_action_data_t motor_action_data) {
     pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.duty_cycle);
 }
 
-void pwm_stop(motor_action_data_t motor_action_data) {
+void pwm_stop_action(motor_action_data_t motor_action_data) {
     pwm_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
 }
 
@@ -40,7 +40,7 @@ void pwm_configure_motors(void) {
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, MOTOR1_PIN2);
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM1A, MOTOR2_PIN1);
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM1B, MOTOR2_PIN2);
-
+    
     mcpwm_config_t pwm_config;
 
     pwm_config.frequency = 1000;

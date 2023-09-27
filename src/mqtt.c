@@ -20,6 +20,19 @@ void set_motor_callback(MotorActionCallback callback, const char* action) {
     } 
 }
 
+static float clip_duty_cycle(float duty_cycle) {
+    float bounded_duty_cycle = 0;
+
+    if (duty_cycle < 0) {
+        bounded_duty_cycle = 0;
+    } else if (duty_cycle > 100) {
+        bounded_duty_cycle = 100;
+    } else {
+        bounded_duty_cycle = duty_cycle;
+    }
+    return bounded_duty_cycle;
+}
+
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)event_data;
     esp_mqtt_client_handle_t client = (esp_mqtt_client_handle_t)handler_args;
@@ -52,19 +65,30 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
             if (strncmp(event->topic, TAG, strlen(TAG)) == 0) {
 
-                motor_action_data_t motor_action_data_1 = {.motor_id = 1};
-                motor_action_data_t motor_action_data_2 = {.motor_id = 2};
+                motor_action_data_t motor_action_data;
+                if (strncmp((char *)event->data, "FW", 2) == 0) {
+                    float duty_cycle;
 
-                if (strncmp((char *)event->data, "FW", event->data_len) == 0) {
-                    forward_callback(motor_action_data_1);
-                    forward_callback(motor_action_data_2);
-                }
-                else if (strncmp((char *)event->data, "BW", event->data_len) == 0) {
-                    backward_callback(motor_action_data_1);
-                    backward_callback(motor_action_data_2);
-                } else if (strncmp((char *)event->data, "ST", event->data_len) == 0) {
-                    stop_callback(motor_action_data_1);
-                    stop_callback(motor_action_data_2);
+                    if (sscanf((char *)event->data, "FW %f", &duty_cycle) == 1) {
+                        float bounded_duty_cycle = clip_duty_cycle(duty_cycle);
+                        motor_action_data.duty_cycle = bounded_duty_cycle;
+                        forward_callback(motor_action_data);
+                    }
+                } else if (strncmp((char *)event->data, "BW", 2) == 0) {
+                    float duty_cycle;
+
+                    if (sscanf((char *)event->data, "BW %f", &duty_cycle) == 1) {
+                        float bounded_duty_cycle = clip_duty_cycle(duty_cycle);
+                        motor_action_data.duty_cycle = bounded_duty_cycle;
+                        backward_callback(motor_action_data);
+                    }
+                } else if (strncmp((char *)event->data, "ST", 2) == 0) {
+                    stop_callback(motor_action_data);
+                } else if (strncmp((char *)event->data, "POS", 3) == 0) {
+                    float x, y;
+                    if (sscanf((char *)event->data, "POS %f %f", &x, &y) == 2) {
+                        //move_to(x, y);
+                    }
                 }
             }
 

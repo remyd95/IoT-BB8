@@ -9,7 +9,7 @@
 #define MOTOR2_PIN1 GPIO_NUM_32
 #define MOTOR2_PIN2 GPIO_NUM_33
 
-void forward_motion(motor_action_data_t motor_action_data);
-void backward_motion(motor_action_data_t motor_action_data);
-void stop(motor_action_data_t motor_action_data);
+void forward_action(motor_action_data_t motor_action_data);
+void backward_action(motor_action_data_t motor_action_data);
+void stop_action(motor_action_data_t motor_action_data);
 void configure_motors(void);
