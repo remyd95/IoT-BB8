@@ -1,6 +1,7 @@
 #pragma once
 
 #include <driver/gpio.h>
+#include "motor_action_data.h"
 
 // Define motor pins
 #define MOTOR1_PIN1 GPIO_NUM_25
@@ -8,7 +9,7 @@
 #define MOTOR2_PIN1 GPIO_NUM_32
 #define MOTOR2_PIN2 GPIO_NUM_33
 
-void forward_motion(int motor_id);
-void backward_motion(int motor_id);
-void stop(int motor_id);
+void forward_motion(motor_action_data_t motor_action_data);
+void backward_motion(motor_action_data_t motor_action_data);
+void stop(motor_action_data_t motor_action_data);
 void configure_motors(void);

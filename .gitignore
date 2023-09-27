@@ -1,2 +1,4 @@
+client/.idea
+client/venv
 .pio
 .vscode

@@ -51,16 +51,20 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             printf("DATA=%.*s\r\n", event->data_len, event->data);
 
             if (strncmp(event->topic, TAG, strlen(TAG)) == 0) {
+
+                motor_action_data_t motor_action_data_1 = {.motor_id = 1};
+                motor_action_data_t motor_action_data_2 = {.motor_id = 2};
+
                 if (strncmp((char *)event->data, "FW", event->data_len) == 0) {
-                    forward_callback(1);
-                    forward_callback(2);
+                    forward_callback(motor_action_data_1);
+                    forward_callback(motor_action_data_2);
                 }
                 else if (strncmp((char *)event->data, "BW", event->data_len) == 0) {
-                    backward_callback(1);
-                    backward_callback(2);
+                    backward_callback(motor_action_data_1);
+                    backward_callback(motor_action_data_2);
                 } else if (strncmp((char *)event->data, "ST", event->data_len) == 0) {
-                    stop_callback(1);
-                    stop_callback(2);
+                    stop_callback(motor_action_data_1);
+                    stop_callback(motor_action_data_2);
                 }
             }
 
