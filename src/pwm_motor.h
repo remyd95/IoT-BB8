@@ -18,4 +18,5 @@ static void pwm_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num);
 void pwm_forward_action(motor_action_data_t motor_action_data);
 void pwm_backward_action(motor_action_data_t motor_action_data);
 void pwm_stop_action(motor_action_data_t motor_action_data);
+
 void pwm_configure_motors(void);

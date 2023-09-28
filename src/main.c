@@ -1,6 +1,7 @@
 #include "wifi.h"
 #include "mqtt.h"
 #include "pwm_motor.h"
+#include "action_handler.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,9 +45,9 @@ void app_main() {
 
     init_wifi(&wifi_event_group, ssid, password);
 
-    set_motor_callback(pwm_forward_action, "forward");
-    set_motor_callback(pwm_backward_action, "backward");
-    set_motor_callback(pwm_stop_action, "stop");
+    set_forward_action_callback(pwm_forward_action);
+    set_backward_action_callback(pwm_backward_action);
+    set_stop_action_callback(pwm_stop_action);
 
     init_mqtt(&mqtt_client, broker_uri);
 

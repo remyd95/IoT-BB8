@@ -18,7 +18,9 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
         printf("Connection has been lost.\n");
 
-        if (retry_num < 5) {
+        //TODO: Stop ANY action when we lose connection 
+
+        if (retry_num < 5) { // Stop after some retries because this drains the battery!
             esp_wifi_connect();\
             retry_num++;
             printf("Retrying to establish outgoing connection...\n");

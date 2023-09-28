@@ -3,13 +3,15 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-static bool is_valid_integer(const char *str) {
-    // Check if the entire string is composed of digits
-    while (*str) {
-        if (!isdigit(*str)) {
-            return false;
-        }
-        str++;
+static float clip_duty_cycle(float duty_cycle) {
+    float bounded_duty_cycle = 0;
+
+    if (duty_cycle < 0) {
+        bounded_duty_cycle = 0;
+    } else if (duty_cycle > 100) {
+        bounded_duty_cycle = 100;
+    } else {
+        bounded_duty_cycle = duty_cycle;
     }
-    return true;
+    return bounded_duty_cycle;
 }
