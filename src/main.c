@@ -17,7 +17,7 @@
 #include "lwip/err.h"
 
 // Define pins
-#define LED_PIN GPIO_NUM_2
+#define LED_PIN GPIO_NUM_10
 
 // WiFi credentials
 const char* ssid = "Phone";

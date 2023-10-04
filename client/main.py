@@ -1,8 +1,7 @@
 import tkinter as tk
 
 from connector.mqtt import MQTTClient
-from devices.controller import Controller
-from gui.controlpanel import ControlPanel
+from gui.control_panel import ControlPanel
 
 
 MQTT_BROKER = "duijsens.dev"
@@ -14,18 +13,13 @@ def main():
     print("Starting Client Application..")
 
     mqtt_connector = MQTTClient(MQTT_BROKER, MQTT_PORT, MQTT_KEEPALIVE)
-
-    controller0 = Controller(0, mqtt_connector, x_pos=1, y_pos=0)
-    controller1 = Controller(1, mqtt_connector, x_pos=-1, y_pos=0)
-    controller2 = Controller(2, mqtt_connector, x_pos=0, y_pos=1)
+    mqtt_connector.connect()
 
     root = tk.Tk()
 
     control_panel = ControlPanel(root)
-
-    control_panel.register_controller(controller0)
-    control_panel.register_controller(controller1)
-    control_panel.regisster_controller(controller2)
+    mqtt_connector.set_register_handler(control_panel.register_ball)
+    mqtt_connector.set_state_handler(control_panel.update_state)
 
     root.mainloop()
 

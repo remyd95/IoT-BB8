@@ -41,15 +41,18 @@ void move_to(float x, float y) {
     float distance_to_travel = fabs(target_y - current_y - deceleration_distance);
     float travel_time = distance_to_travel / velocity;
 
+    motor_action_data_t motor_action_data = {.duty_cycle = 100};
+
     if (target_y > current_y) {
-        //forward
+        forward_callback(motor_action_data);
     } else {
-        //backward
+        backward_callback(motor_action_data);
     }
 
     vTaskDelay(travel_time*1000 / portTICK_PERIOD_MS);
 
-    //stop
+    stop_callback(motor_action_data);
+    
     set_current_coordinates(current_x, target_y);
 }
 
