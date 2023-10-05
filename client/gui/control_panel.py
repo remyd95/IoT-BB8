@@ -1,3 +1,4 @@
+import math
 import tkinter as tk
 from tkinter import ttk
 
@@ -54,6 +55,7 @@ class ControlPanel:
                               i * self.canvas_size / self.grid_steps,
                               self.canvas_size - self.padding)
 
+            # Draw lines on y-axis
             if self.is_in_grid(x0, self.padding):
                 self.canvas.create_line(x0, y0, x1, y1, fill=fill_color)
 
@@ -62,6 +64,7 @@ class ControlPanel:
                               self.canvas_size - self.padding,
                               i * self.canvas_size / self.grid_steps)
 
+            # Draw lines on x-axis
             if self.is_in_grid(self.padding, y0):
                 self.canvas.create_line(x0, y0, x1, y1, fill=fill_color)
 
@@ -87,6 +90,7 @@ class ControlPanel:
             if self.selected_ball:
                 grid_x, grid_y = self.canvas_to_grid_coords(event.x, event.y)
                 if self.selected_ball.gui_obj is None:
+                    # Create ball object for the first time
                     ball_obj = self.canvas.create_oval(event.x - 10,
                                                        event.y - 10,
                                                        event.x + 10,
@@ -94,29 +98,47 @@ class ControlPanel:
                                                        fill=BALL_COLOR)
                     self.selected_ball.set_gui_object(ball_obj)
 
-                    position_label = self.canvas.create_text(event.x, event.y, text=f"({grid_x:.2f}, {grid_y:.2f})")
+                    # Create position marker for the first time
+                    position_label = self.canvas.create_text(event.x, event.y + 15,
+                                                             text=f"{self.selected_ball.name}\n({grid_x:.2f}, {grid_y:.2f})",
+                                                             anchor="n", state="hidden")
                     self.selected_ball.set_position_label(position_label)
 
+                    # Set hover functionality to show and hide the ball position label
+                    self.tag_bind_position_label(self.selected_ball)
+
+                    # Update believes about current position
                     self.selected_ball.x_pos = grid_x
                     self.selected_ball.y_pos = grid_y
 
+                    # Remove first placement warning after placement
                     self.initial_ball_warning.destroy()
                     print(f"[GUI] Set initial ball location to: ({grid_x:.2f}, {grid_y:.2f})")
                 else:
                     if self.selected_ball.has_target_location:
                         print(f"[GUI] Cannot override existing target location for {self.selected_ball.name}")
                         return
-
+                    # Create move objective
                     data = {'x': grid_x, 'y': grid_y}
                     self.move_to(data)
                     self.selected_ball.has_target_location = True
-                    self.selected_ball.target_obj = (
+
+                    # Draw red cross at target location
+                    self.selected_ball.set_target_object((
                         self.canvas.create_line(event.x - 10, event.y, event.x + 10, event.y, fill="red"),
-                        self.canvas.create_line(event.x, event.y - 10, event.x, event.y + 10, fill="red"))
+                        self.canvas.create_line(event.x, event.y - 10, event.x, event.y + 10, fill="red")))
 
                     print(f"[GUI] Set ball target location to: ({grid_x:.2f}, {grid_y:.2f})")
         else:
             print("[GUI] Selection not in grid")
+
+    def show_position_label(self, ball):
+        if ball.position_label:
+            self.canvas.itemconfig(ball.position_label, state="normal")
+
+    def hide_position_label(self, ball):
+        if ball.position_label:
+            self.canvas.itemconfig(ball.position_label, state="hidden")
 
     def on_hover(self, event):
         if self.is_in_grid(event.x, event.y):
@@ -126,6 +148,7 @@ class ControlPanel:
             self.grid_position.config(text="Cursor not in grid")
 
     def on_ball_select(self, event):
+        # Remove the first placement warning when selecting other ball
         if self.initial_ball_warning:
             self.initial_ball_warning.destroy()
 
@@ -137,6 +160,7 @@ class ControlPanel:
                 self.selected_ball = ball
                 self.max_speed_slider.set(self.selected_ball.max_speed)
                 if ball.gui_obj is None:
+                    # If ball not placed show a warning
                     self.initial_ball_warning = tk.Label(self.root,
                                                          text="Please select the initial ball position on the grid",
                                                          bg="red",
@@ -145,11 +169,14 @@ class ControlPanel:
                 return
 
     def register_ball(self, ball_id, mqtt_connector):
+        # If ball not yet registered
         if all(ball_id != ball.id for ball in self.balls):
             registered_ball = Ball(ball_id, mqtt_connector)
             registered_ball.set_gui_object(None)
+
             self.balls.append(registered_ball)
             self.ball_selector['values'] = [ball.name for ball in self.balls]
+
             registered_ball.mqtt_connector.subscribe(registered_ball.name + "/state")
         else:
             print("[GUI] Duplicate ball registration: " + str(ball_id))
@@ -158,10 +185,13 @@ class ControlPanel:
         for ball in self.balls:
             if ball.name == ball_name:
                 if ball.gui_obj:
+                    # Retrieve data from state update
                     ball.x_pos = state_update['x']
                     ball.y_pos = state_update['y']
+                    ball.rotation = state_update['rotation']
                     ball.cur_action = get_action_from_value(state_update['action'])
 
+                    # If new state is IDLE clear all objectives
                     if ball.cur_action == ActionType.IDLE:
                         if ball.has_target_location:
                             ball.has_target_location = False
@@ -169,8 +199,12 @@ class ControlPanel:
                             self.canvas.delete(ball.target_obj[1])
                             ball.target_obj = None
 
+                    # Clear old GUI components
                     self.canvas.delete(ball.gui_obj)
                     self.canvas.delete(ball.position_label)
+                    self.canvas.delete(ball.direction_obj)
+
+                    # Draw the ball
                     x_canvas, y_canvas = self.grid_to_canvas_coords(ball.x_pos, ball.y_pos)
                     ball_obj = self.canvas.create_oval(x_canvas - 10,
                                                        y_canvas - 10,
@@ -179,9 +213,22 @@ class ControlPanel:
                                                        fill=BALL_COLOR)
                     ball.set_gui_object(ball_obj)
 
-                    position_label = self.canvas.create_text(x_canvas, y_canvas,
-                                                             text=f"({ball.x_pos:.2f}, {ball.y_pos:.2f})")
+                    # Create position marker
+                    position_label = self.canvas.create_text(x_canvas, y_canvas + 15,
+                                                             text=f"{self.selected_ball.name}\n({ball.x_pos:.2f}, {ball.y_pos:.2f})",
+                                                             anchor="n", state="hidden")
                     ball.set_position_label(position_label)
+                    self.tag_bind_position_label(ball)
+
+                    # Draw direction arrow
+                    arrow_length = 25
+                    arrow_width = 3
+                    arrow_x = x_canvas + arrow_length * math.cos(math.radians(-1*ball.rotation + 90))
+                    arrow_y = y_canvas - arrow_length * math.sin(math.radians(-1*ball.rotation + 90))
+                    direction_arrow = self.canvas.create_line(x_canvas, y_canvas, arrow_x, arrow_y,
+                                                              fill="green", arrow=tk.LAST, width=arrow_width)
+                    ball.set_direction_object(direction_arrow)
+
                     print(f"[GUI] New state of {ball_name} is {ball.x_pos}, {ball.y_pos}, {ball.cur_action}")
                 return
 
@@ -270,22 +317,33 @@ class ControlPanel:
         for ball in self.balls:
             if ball.name == ball_name:
                 self.delete_ball(ball)
-                return
+                return True
+        return False
 
     def delete_ball(self, ball):
+        # If ball is placed remove all GUI components
         if ball.gui_obj:
             self.canvas.delete(ball.gui_obj)
             self.canvas.delete(ball.position_label)
 
+        # If ball had move objective remove all GUI components
         if ball.has_target_location:
             self.canvas.delete(ball.target_obj[0])
             self.canvas.delete(ball.target_obj[1])
             ball.target_obj = None
 
+        # If ball had a known direction remove the arrow GUI component
+        if ball.direction_obj:
+            self.canvas.delete(ball.direction_obj)
+
+        # Remove internal data of ball
         self.balls.remove(ball)
         ball.mqtt_connector.unsubscribe(ball.name + "/state")
+
+        # Refresh ball selector list
         self.ball_selector['values'] = [ball.name for ball in self.balls]
 
+        # Reset GUI components if deleted ball was currently selected
         if self.selected_ball and ball.name == self.selected_ball.name:
             self.initial_ball_warning.destroy()
             self.ball_selector.set('Select a ball')
@@ -298,3 +356,9 @@ class ControlPanel:
         if self.selected_ball and self.selected_ball.gui_obj:
             new_max_speed = self.max_speed_value.get()
             self.selected_ball.max_speed = new_max_speed
+
+    def tag_bind_position_label(self, ball):
+        self.canvas.tag_bind(ball.gui_obj, "<Enter>",
+                             lambda event, sel_ball=ball: self.show_position_label(sel_ball))
+        self.canvas.tag_bind(ball.gui_obj, "<Leave>",
+                             lambda event, sel_ball=ball: self.hide_position_label(sel_ball))

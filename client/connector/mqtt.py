@@ -4,6 +4,8 @@ import time
 
 import paho.mqtt.client as mqtt
 
+TIMEOUT_MS = 60000
+
 
 class MQTTClient:
 
@@ -47,7 +49,7 @@ class MQTTClient:
                 if re.match(pattern, payload):
                     ball_id = payload
 
-                    self.last_state_update["ball"+str(ball_id)] = time.time()
+                    self.last_state_update["ball" + str(ball_id)] = time.time()
                     self.register_handler(ball_id, self)
                 else:
                     print("Invalid payload format: Expected ball id of 6 digits.")
@@ -55,33 +57,34 @@ class MQTTClient:
             ball_name = msg.topic.split('/')[0]
             payload_numbers = msg.payload.decode('utf-8').split()
 
-            if len(payload_numbers) == 3:
+            if len(payload_numbers) == 4:
                 try:
                     x = float(payload_numbers[0])
                     y = float(payload_numbers[1])
-                    action = int(payload_numbers[2])
+                    rotation = float(payload_numbers[2])
+                    action = int(payload_numbers[3])
 
-                    state_update = {'x': x, 'y': y, 'action': action}
+                    state_update = {'x': x, 'y': y, 'rotation': rotation, 'action': action}
 
                     self.last_state_update[ball_name] = time.time()
                     self.state_handler(ball_name, state_update)
                 except ValueError:
                     print("Invalid payload format: Unable to convert to numbers.")
             else:
-                print("Invalid payload format: Expected two space-separated numbers.")
+                print("Invalid payload format: Expected 4 space-separated numbers.")
 
     def remove_inactive_balls(self):
         current_time = time.time()
         inactive_balls = []
 
         for ball_name, last_update_time in self.last_state_update.items():
-            if current_time - last_update_time > 60:
+            if current_time - last_update_time > TIMEOUT_MS//1000:
                 inactive_balls.append(ball_name)
 
         for ball_name in inactive_balls:
-            print(f"[MQTT] Removing {ball_name} due to timeout (60s)")
             del self.last_state_update[ball_name]
-            self.deregister_handler(ball_name)
+            if self.deregister_handler(ball_name):
+                print(f"[MQTT] Removing {ball_name} due to timeout (60s)")
 
     def start_inactive_ball_checker(self):
         while True:
