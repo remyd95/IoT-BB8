@@ -261,4 +261,3 @@ class ControlPanel:
         if self.selected_ball and self.selected_ball.gui_obj:
             new_max_speed = self.max_speed_value.get()
             self.selected_ball.max_speed = new_max_speed
-            print(f"[GUI] Updated max speed for {self.selected_ball.name} to {new_max_speed}%")
