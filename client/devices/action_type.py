@@ -2,10 +2,11 @@ from enum import Enum
 
 
 class ActionType(Enum):
-    MOVETO = 0
-    FORWARD = 1
-    BACKWARD = 2
-    STOP = 3
+    IDLE = 0
+    MOVETO = 1
+    FORWARD = 2
+    BACKWARD = 3
+    STOP = 4
     UNDEFINED = -1
 
 

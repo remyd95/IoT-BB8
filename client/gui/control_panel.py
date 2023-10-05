@@ -84,25 +84,33 @@ class ControlPanel:
 
     def on_click(self, event):
         if self.is_in_grid(event.x, event.y):
-            if self.selected_ball and self.selected_ball.gui_obj is None:
+            if self.selected_ball:
                 grid_x, grid_y = self.canvas_to_grid_coords(event.x, event.y)
+                if self.selected_ball.gui_obj is None:
+                    ball_obj = self.canvas.create_oval(event.x - 10,
+                                                       event.y - 10,
+                                                       event.x + 10,
+                                                       event.y + 10,
+                                                       fill=BALL_COLOR)
+                    self.selected_ball.set_gui_object(ball_obj)
 
-                ball_obj = self.canvas.create_oval(event.x - 10,
-                                                   event.y - 10,
-                                                   event.x + 10,
-                                                   event.y + 10,
-                                                   fill=BALL_COLOR)
-                self.selected_ball.set_gui_object(ball_obj)
+                    position_label = self.canvas.create_text(event.x, event.y, text=f"({grid_x:.2f}, {grid_y:.2f})")
+                    self.selected_ball.set_position_label(position_label)
 
-                position_label = self.canvas.create_text(event.x, event.y, text=f"({grid_x:.2f}, {grid_y:.2f})")
-                self.selected_ball.set_position_label(position_label)
+                    self.selected_ball.x_pos = grid_x
+                    self.selected_ball.y_pos = grid_y
 
-                self.selected_ball.x_pos = grid_x
-                self.selected_ball.y_pos = grid_y
+                    self.initial_ball_warning.destroy()
+                    print(f"[GUI] Set initial ball location to: ({grid_x:.2f}, {grid_y:.2f})")
+                else:
+                    if self.selected_ball.has_target_location:
+                        print(f"[GUI] Cannot override existing target location for ball {self.selected_ball.name}")
+                        return
 
-                self.initial_ball_warning.destroy()
-                print(f"[GUI] Set initial ball location to: ({grid_x:.2f}, {grid_y:.2f})")
-                return
+                    data = {'x': grid_x, 'y': grid_y}
+                    self.move_to(data)
+                    self.selected_ball.has_target_location = True
+                    print(f"[GUI] Set ball target location to: ({grid_x:.2f}, {grid_y:.2f})")
         else:
             print("[GUI] Selection not in grid")
 

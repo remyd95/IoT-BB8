@@ -13,6 +13,7 @@ class Ball:
         self.max_speed = 100
         self.x_pos = None
         self.y_pos = None
+        self.has_target_location = False
 
         # MQTT data
         self.mqtt_connector = mqtt_connector
@@ -31,6 +32,8 @@ class Ball:
             self.mqtt_connector.publish(self.topic, "ST")
         elif action_type == ActionType.MOVETO:
             self.mqtt_connector.publish(self.topic, f"MV {data['x']} {data['y']} {data['speed']}")
+        elif action_type == ActionType.IDLE:
+            pass
 
     def set_gui_object(self, gui_obj):
         self.gui_obj = gui_obj
