@@ -104,12 +104,15 @@ class ControlPanel:
                     print(f"[GUI] Set initial ball location to: ({grid_x:.2f}, {grid_y:.2f})")
                 else:
                     if self.selected_ball.has_target_location:
-                        print(f"[GUI] Cannot override existing target location for ball {self.selected_ball.name}")
+                        print(f"[GUI] Cannot override existing target location for {self.selected_ball.name}")
                         return
 
                     data = {'x': grid_x, 'y': grid_y}
                     self.move_to(data)
                     self.selected_ball.has_target_location = True
+                    self.selected_ball.target_obj = (
+                        self.canvas.create_line(event.x - 10, event.y, event.x + 10, event.y, fill="red"),
+                        self.canvas.create_line(event.x, event.y - 10, event.x, event.y + 10, fill="red"))
                     print(f"[GUI] Set ball target location to: ({grid_x:.2f}, {grid_y:.2f})")
         else:
             print("[GUI] Selection not in grid")
@@ -156,6 +159,13 @@ class ControlPanel:
                     ball.x_pos = state_update['x']
                     ball.y_pos = state_update['y']
                     ball.cur_action = get_action_from_value(state_update['action'])
+
+                    if ball.cur_action == ActionType.IDLE:
+                        if ball.has_target_location:
+                            ball.has_target_location = False
+                            self.canvas.delete(ball.target_obj[0])
+                            self.canvas.delete(ball.target_obj[1])
+                            ball.target_obj = None
 
                     self.canvas.delete(ball.gui_obj)
                     self.canvas.delete(ball.position_label)
@@ -257,6 +267,12 @@ class ControlPanel:
                 self.canvas.delete(self.selected_ball.position_label)
             else:
                 self.initial_ball_warning.destroy()
+
+            if self.selected_ball.has_target_location:
+                self.canvas.delete(self.selected_ball.target_obj[0])
+                self.canvas.delete(self.selected_ball.target_obj[1])
+                self.selected_ball.target_obj = None
+
             self.balls.remove(self.selected_ball)
             self.selected_ball.mqtt_connector.unsubscribe(self.selected_ball.name + "/state")
             self.ball_selector['values'] = [ball.name for ball in self.balls]
