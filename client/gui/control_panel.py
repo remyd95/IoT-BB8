@@ -166,6 +166,8 @@ class ControlPanel:
         if self.is_in_grid(event.x, event.y):
             if self.selected_ball:
                 grid_x, grid_y = self.canvas_to_grid_coords(event.x, event.y)
+                data = {'x': grid_x, 'y': grid_y}
+
                 if self.selected_ball.gui_obj is None:
                     # Create ball object for the first time
                     ball_obj = self.canvas.create_oval(event.x - 10,
@@ -188,6 +190,9 @@ class ControlPanel:
                     self.selected_ball.x_pos = grid_x
                     self.selected_ball.y_pos = grid_y
 
+                    # Send initial position to ball
+                    self.init_position(data)
+
                     # Remove first placement warning after placement
                     self.initial_ball_warning.destroy()
                     print(f"[GUI] Set initial ball location to: ({grid_x:.2f}, {grid_y:.2f})")
@@ -196,7 +201,6 @@ class ControlPanel:
                         print(f"[GUI] Cannot override existing target location for {self.selected_ball.name}")
                         return
                     # Create move objective
-                    data = {'x': grid_x, 'y': grid_y}
                     self.move_to(data)
                     self.selected_ball.has_target_location = True
 
@@ -329,6 +333,7 @@ class ControlPanel:
         # Remove internal data of ball
         self.balls.remove(ball)
         ball.mqtt_connector.unsubscribe(ball.name + "/state")
+        self.disconnect()
 
         # Refresh ball selector list
         self.ball_selector['values'] = [ball.name for ball in self.balls]
@@ -364,6 +369,14 @@ class ControlPanel:
         if self.selected_ball:
             data['speed'] = self.max_speed_value.get()
             self.selected_ball.action(ActionType.MOVETO, data)
+
+    def init_position(self, data):
+        if self.selected_ball:
+            self.selected_ball.action(ActionType.INIT, data)
+
+    def disconnect(self):
+        if self.selected_ball:
+            self.selected_ball.action(ActionType.DISCONNECT)
 
     def stop_movement(self):
         if self.selected_ball:

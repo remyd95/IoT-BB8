@@ -47,4 +47,7 @@ class Ball:
             self.mqtt_connector.publish(self.topic, "ST")
         elif action_type == ActionType.MOVETO:
             self.mqtt_connector.publish(self.topic, f"MV {data['x']} {data['y']} {data['speed']}")
-
+        elif action_type == ActionType.INIT:
+            self.mqtt_connector.publish(self.topic, f"IN {data['x']} {data['y']}")
+        elif action_type == ActionType.DISCONNECT:
+            self.mqtt_connector.publish(self.topic, "DC")

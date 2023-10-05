@@ -7,6 +7,8 @@ class ActionType(Enum):
     FORWARD = 2
     BACKWARD = 3
     STOP = 4
+    INIT = 5
+    DISCONNECT = 6
     UNDEFINED = -1
 
 
