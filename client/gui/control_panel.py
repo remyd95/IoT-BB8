@@ -68,6 +68,56 @@ class ControlPanel:
             if self.is_in_grid(self.padding, y0):
                 self.canvas.create_line(x0, y0, x1, y1, fill=fill_color)
 
+    def set_basestation_icon(self):
+        canvas_x, canvas_y = self.grid_to_canvas_coords(0, 0)
+        self.base = self.canvas.create_rectangle(canvas_x - 10,
+                                                 canvas_y - 10,
+                                                 canvas_x + 10,
+                                                 canvas_y + 10,
+                                                 fill=BASE_COLOR)
+        # Add a label
+        label_x = (canvas_x - 10 + canvas_x + 10) / 2
+        label_y = canvas_y + 20
+        self.base_label = self.canvas.create_text(label_x, label_y, text="Base Station", anchor="n", state="hidden")
+
+    def setup_touchscreen(self):
+        self.canvas.bind("<Button-1>", self.on_click)
+        self.canvas.bind("<Motion>", self.on_hover)
+        self.ball_selector.bind("<<ComboboxSelected>>", self.on_ball_select)
+        self.canvas.tag_bind(self.base, "<Enter>", self.show_base_label)
+        self.canvas.tag_bind(self.base, "<Leave>", self.hide_base_label)
+
+    def create_buttons(self):
+        self.grid_position = tk.Label(self.root, text="")
+        self.grid_position.grid(row=2, column=0)
+
+        self.ball_selector_value = tk.StringVar()
+        self.ball_selector = ttk.Combobox(self.root, textvariable=self.ball_selector_value,
+                                          values=[ball.name for ball in self.balls], state='readonly')
+        self.ball_selector.grid(row=3, column=0, pady=(10, 20))
+        self.ball_selector.set('Select a ball')
+
+        delete_button = tk.Button(self.root, text="Disconnect Ball", command=self.delete_selected_ball)
+        delete_button.grid(row=4, column=0, padx=(0, 350))
+
+        forward_button = tk.Button(self.root, text="Forward", command=self.move_forward)
+        forward_button.grid(row=4, column=0, padx=(0, 100))
+
+        backward_button = tk.Button(self.root, text="Backward", command=self.move_backward)
+        backward_button.grid(row=4, column=0, padx=(100, 0))
+
+        stop_button = tk.Button(self.root, text="Stop", command=self.stop_movement)
+        stop_button.grid(row=4, column=0, padx=(300, 0))
+
+        max_speed_label = tk.Label(self.root, text="Max Speed:")
+        max_speed_label.grid(row=8, column=0, padx=(0, 200))
+
+        self.max_speed_value = tk.IntVar()
+        self.max_speed_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_value,
+                                         command=self.on_max_speed_update)
+        self.max_speed_slider.grid(row=8, column=0, pady=(0, 20))
+        self.max_speed_slider.set(100)
+
     def canvas_to_grid_coords(self, x, y):
         x_grid = x - self.canvas_size // 2
         y_grid = -1 * y + self.canvas_size // 2
@@ -84,6 +134,33 @@ class ControlPanel:
             return False
         else:
             return True
+
+    def show_position_label(self, ball):
+        if ball.position_label:
+            self.canvas.itemconfig(ball.position_label, state="normal")
+
+    def hide_position_label(self, ball):
+        if ball.position_label:
+            self.canvas.itemconfig(ball.position_label, state="hidden")
+
+    def show_base_label(self, event):
+        self.canvas.itemconfig(self.base_label, state="normal")
+
+    def hide_base_label(self, event):
+        self.canvas.itemconfig(self.base_label, state="hidden")
+
+    def tag_bind_position_label(self, ball):
+        self.canvas.tag_bind(ball.gui_obj, "<Enter>",
+                             lambda event, sel_ball=ball: self.show_position_label(sel_ball))
+        self.canvas.tag_bind(ball.gui_obj, "<Leave>",
+                             lambda event, sel_ball=ball: self.hide_position_label(sel_ball))
+
+    def on_hover(self, event):
+        if self.is_in_grid(event.x, event.y):
+            grid_x, grid_y = self.canvas_to_grid_coords(event.x, event.y)
+            self.grid_position.config(text=f"Cursor location: ({grid_x:.2f}, {grid_y:.2f})")
+        else:
+            self.grid_position.config(text="Cursor not in grid")
 
     def on_click(self, event):
         if self.is_in_grid(event.x, event.y):
@@ -132,21 +209,6 @@ class ControlPanel:
         else:
             print("[GUI] Selection not in grid")
 
-    def show_position_label(self, ball):
-        if ball.position_label:
-            self.canvas.itemconfig(ball.position_label, state="normal")
-
-    def hide_position_label(self, ball):
-        if ball.position_label:
-            self.canvas.itemconfig(ball.position_label, state="hidden")
-
-    def on_hover(self, event):
-        if self.is_in_grid(event.x, event.y):
-            grid_x, grid_y = self.canvas_to_grid_coords(event.x, event.y)
-            self.grid_position.config(text=f"Cursor location: ({grid_x:.2f}, {grid_y:.2f})")
-        else:
-            self.grid_position.config(text="Cursor not in grid")
-
     def on_ball_select(self, event):
         # Remove the first placement warning when selecting other ball
         if self.initial_ball_warning:
@@ -168,18 +230,10 @@ class ControlPanel:
                     self.initial_ball_warning.grid(row=1, column=0)
                 return
 
-    def register_ball(self, ball_id, mqtt_connector):
-        # If ball not yet registered
-        if all(ball_id != ball.id for ball in self.balls):
-            registered_ball = Ball(ball_id, mqtt_connector)
-            registered_ball.set_gui_object(None)
-
-            self.balls.append(registered_ball)
-            self.ball_selector['values'] = [ball.name for ball in self.balls]
-
-            registered_ball.mqtt_connector.subscribe(registered_ball.name + "/state")
-        else:
-            print("[GUI] Duplicate ball registration: " + str(ball_id))
+    def on_max_speed_update(self, event):
+        if self.selected_ball and self.selected_ball.gui_obj:
+            new_max_speed = self.max_speed_value.get()
+            self.selected_ball.max_speed = new_max_speed
 
     def update_state(self, ball_name, state_update):
         for ball in self.balls:
@@ -215,7 +269,7 @@ class ControlPanel:
 
                     # Create position marker
                     position_label = self.canvas.create_text(x_canvas, y_canvas + 15,
-                                                             text=f"{self.selected_ball.name}\n({ball.x_pos:.2f}, {ball.y_pos:.2f})",
+                                                             text=f"{ball.name}\n({ball.x_pos:.2f}, {ball.y_pos:.2f})",
                                                              anchor="n", state="hidden")
                     ball.set_position_label(position_label)
                     self.tag_bind_position_label(ball)
@@ -223,8 +277,8 @@ class ControlPanel:
                     # Draw direction arrow
                     arrow_length = 25
                     arrow_width = 3
-                    arrow_x = x_canvas + arrow_length * math.cos(math.radians(-1*ball.rotation + 90))
-                    arrow_y = y_canvas - arrow_length * math.sin(math.radians(-1*ball.rotation + 90))
+                    arrow_x = x_canvas + arrow_length * math.cos(math.radians(-1 * ball.rotation + 90))
+                    arrow_y = y_canvas - arrow_length * math.sin(math.radians(-1 * ball.rotation + 90))
                     direction_arrow = self.canvas.create_line(x_canvas, y_canvas, arrow_x, arrow_y,
                                                               fill="green", arrow=tk.LAST, width=arrow_width)
                     ball.set_direction_object(direction_arrow)
@@ -232,82 +286,18 @@ class ControlPanel:
                     print(f"[GUI] New state of {ball_name} is {ball.x_pos}, {ball.y_pos}, {ball.cur_action}")
                 return
 
-    def create_buttons(self):
-        self.grid_position = tk.Label(self.root, text="")
-        self.grid_position.grid(row=2, column=0)
+    def register_ball(self, ball_id, mqtt_connector):
+        # If ball not yet registered
+        if all(ball_id != ball.id for ball in self.balls):
+            registered_ball = Ball(ball_id, mqtt_connector)
+            registered_ball.set_gui_object(None)
 
-        self.ball_selector_value = tk.StringVar()
-        self.ball_selector = ttk.Combobox(self.root, textvariable=self.ball_selector_value,
-                                          values=[ball.name for ball in self.balls], state='readonly')
-        self.ball_selector.grid(row=3, column=0, pady=(10, 20))
-        self.ball_selector.set('Select a ball')
+            self.balls.append(registered_ball)
+            self.ball_selector['values'] = [ball.name for ball in self.balls]
 
-        delete_button = tk.Button(self.root, text="Disconnect Ball", command=self.delete_selected_ball)
-        delete_button.grid(row=4, column=0, padx=(0, 350))
-
-        forward_button = tk.Button(self.root, text="Forward", command=self.move_forward)
-        forward_button.grid(row=4, column=0, padx=(0, 100))
-
-        backward_button = tk.Button(self.root, text="Backward", command=self.move_backward)
-        backward_button.grid(row=4, column=0, padx=(100, 0))
-
-        stop_button = tk.Button(self.root, text="Stop", command=self.stop_movement)
-        stop_button.grid(row=4, column=0, padx=(300, 0))
-
-        max_speed_label = tk.Label(self.root, text="Max Speed:")
-        max_speed_label.grid(row=8, column=0, padx=(0, 200))
-
-        self.max_speed_value = tk.IntVar()
-        self.max_speed_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_value,
-                                         command=self.on_max_speed_update)
-        self.max_speed_slider.grid(row=8, column=0, pady=(0, 20))
-        self.max_speed_slider.set(100)
-
-    def move_forward(self):
-        if self.selected_ball:
-            speed = self.max_speed_value.get()
-            data = {'speed': speed}
-            self.selected_ball.action(ActionType.FORWARD, data)
-
-    def move_backward(self):
-        if self.selected_ball:
-            speed = self.max_speed_value.get()
-            data = {'speed': speed}
-            self.selected_ball.action(ActionType.BACKWARD, data)
-
-    def move_to(self, data):
-        if self.selected_ball:
-            data['speed'] = self.max_speed_value.get()
-            self.selected_ball.action(ActionType.MOVETO, data)
-
-    def stop_movement(self):
-        if self.selected_ball:
-            self.selected_ball.action(ActionType.STOP)
-
-    def setup_touchscreen(self):
-        self.canvas.bind("<Button-1>", self.on_click)
-        self.canvas.bind("<Motion>", self.on_hover)
-        self.ball_selector.bind("<<ComboboxSelected>>", self.on_ball_select)
-        self.canvas.tag_bind(self.base, "<Enter>", self.show_base_label)
-        self.canvas.tag_bind(self.base, "<Leave>", self.hide_base_label)
-
-    def set_basestation_icon(self):
-        canvas_x, canvas_y = self.grid_to_canvas_coords(0, 0)
-        self.base = self.canvas.create_rectangle(canvas_x - 10,
-                                                 canvas_y - 10,
-                                                 canvas_x + 10,
-                                                 canvas_y + 10,
-                                                 fill=BASE_COLOR)
-        # Add a label
-        label_x = (canvas_x - 10 + canvas_x + 10) / 2
-        label_y = canvas_y + 20
-        self.base_label = self.canvas.create_text(label_x, label_y, text="Base Station", anchor="n", state="hidden")
-
-    def show_base_label(self, event):
-        self.canvas.itemconfig(self.base_label, state="normal")
-
-    def hide_base_label(self, event):
-        self.canvas.itemconfig(self.base_label, state="hidden")
+            registered_ball.mqtt_connector.subscribe(registered_ball.name + "/state")
+        else:
+            print("[GUI] Duplicate ball registration: " + str(ball_id))
 
     def delete_selected_ball(self):
         if self.selected_ball:
@@ -352,13 +342,29 @@ class ControlPanel:
 
         print(f"[GUI] Disconnected ball: {ball.name}")
 
-    def on_max_speed_update(self, event):
-        if self.selected_ball and self.selected_ball.gui_obj:
-            new_max_speed = self.max_speed_value.get()
-            self.selected_ball.max_speed = new_max_speed
+    def move_forward(self):
+        if self.selected_ball:
+            if self.selected_ball.has_target_location:
+                print(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
+                return
+            speed = self.max_speed_value.get()
+            data = {'speed': speed}
+            self.selected_ball.action(ActionType.FORWARD, data)
 
-    def tag_bind_position_label(self, ball):
-        self.canvas.tag_bind(ball.gui_obj, "<Enter>",
-                             lambda event, sel_ball=ball: self.show_position_label(sel_ball))
-        self.canvas.tag_bind(ball.gui_obj, "<Leave>",
-                             lambda event, sel_ball=ball: self.hide_position_label(sel_ball))
+    def move_backward(self):
+        if self.selected_ball:
+            if self.selected_ball.has_target_location:
+                print(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
+                return
+            speed = self.max_speed_value.get()
+            data = {'speed': speed}
+            self.selected_ball.action(ActionType.BACKWARD, data)
+
+    def move_to(self, data):
+        if self.selected_ball:
+            data['speed'] = self.max_speed_value.get()
+            self.selected_ball.action(ActionType.MOVETO, data)
+
+    def stop_movement(self):
+        if self.selected_ball:
+            self.selected_ball.action(ActionType.STOP)

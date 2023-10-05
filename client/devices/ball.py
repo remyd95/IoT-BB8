@@ -26,16 +26,6 @@ class Ball:
         self.target_obj = None
         self.direction_obj = None
 
-    def action(self, action_type, data=None):
-        if action_type == ActionType.FORWARD:
-            self.mqtt_connector.publish(self.topic, f"FW {data['speed']}")
-        elif action_type == ActionType.BACKWARD:
-            self.mqtt_connector.publish(self.topic, f"BW {data['speed']}")
-        elif action_type == ActionType.STOP:
-            self.mqtt_connector.publish(self.topic, "ST")
-        elif action_type == ActionType.MOVETO:
-            self.mqtt_connector.publish(self.topic, f"MV {data['x']} {data['y']} {data['speed']}")
-
     def set_gui_object(self, gui_obj):
         self.gui_obj = gui_obj
 
@@ -47,4 +37,14 @@ class Ball:
 
     def set_position_label(self, position_label):
         self.position_label = position_label
+
+    def action(self, action_type, data=None):
+        if action_type == ActionType.FORWARD:
+            self.mqtt_connector.publish(self.topic, f"FW {data['speed']}")
+        elif action_type == ActionType.BACKWARD:
+            self.mqtt_connector.publish(self.topic, f"BW {data['speed']}")
+        elif action_type == ActionType.STOP:
+            self.mqtt_connector.publish(self.topic, "ST")
+        elif action_type == ActionType.MOVETO:
+            self.mqtt_connector.publish(self.topic, f"MV {data['x']} {data['y']} {data['speed']}")
 
