@@ -187,7 +187,7 @@ class ControlPanel:
         stop_button.grid(row=4, column=0,  padx=(300, 0))
 
         max_speed_label = tk.Label(self.root, text="Max Speed:")
-        max_speed_label.grid(row=8, column=0, padx=(0, 150))
+        max_speed_label.grid(row=8, column=0, padx=(0, 200))
 
         self.max_speed_value = tk.IntVar()
         self.max_speed_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_value,
@@ -258,7 +258,7 @@ class ControlPanel:
             return
 
     def on_max_speed_update(self, event):
-        new_max_speed = self.max_speed_value.get()
-        if self.selected_ball:
+        if self.selected_ball and self.selected_ball.gui_obj:
+            new_max_speed = self.max_speed_value.get()
             self.selected_ball.max_speed = new_max_speed
             print(f"[GUI] Updated max speed for {self.selected_ball.name} to {new_max_speed}%")
