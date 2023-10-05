@@ -137,7 +137,7 @@ class ControlPanel:
             registered_ball.set_gui_object(None)
             self.balls.append(registered_ball)
             self.ball_selector['values'] = [ball.name for ball in self.balls]
-            registered_ball.mqtt_connector.subscribe(registered_ball.name+"/state")
+            registered_ball.mqtt_connector.subscribe(registered_ball.name + "/state")
         else:
             print("[GUI] Duplicate ball registration: " + str(ball_id))
 
@@ -159,7 +159,8 @@ class ControlPanel:
                                                        fill=BALL_COLOR)
                     ball.set_gui_object(ball_obj)
 
-                    position_label = self.canvas.create_text(x_canvas, y_canvas, text=f"({ball.x_pos:.2f}, {ball.y_pos:.2f})")
+                    position_label = self.canvas.create_text(x_canvas, y_canvas,
+                                                             text=f"({ball.x_pos:.2f}, {ball.y_pos:.2f})")
                     ball.set_position_label(position_label)
                 print(f"[GUI] New state of {ball_id} is {ball.x_pos}, {ball.y_pos}, {ball.cur_action}")
                 return
@@ -175,16 +176,16 @@ class ControlPanel:
         self.ball_selector.set('Select a ball')
 
         delete_button = tk.Button(self.root, text="Disconnect Ball", command=self.delete_selected_ball)
-        delete_button.grid(row=4, column=0,  padx=(0, 350))
+        delete_button.grid(row=4, column=0, padx=(0, 350))
 
         forward_button = tk.Button(self.root, text="Forward", command=self.move_forward)
-        forward_button.grid(row=4, column=0,  padx=(0, 100))
+        forward_button.grid(row=4, column=0, padx=(0, 100))
 
         backward_button = tk.Button(self.root, text="Backward", command=self.move_backward)
-        backward_button.grid(row=4, column=0,  padx=(100, 0))
+        backward_button.grid(row=4, column=0, padx=(100, 0))
 
         stop_button = tk.Button(self.root, text="Stop", command=self.stop_movement)
-        stop_button.grid(row=4, column=0,  padx=(300, 0))
+        stop_button.grid(row=4, column=0, padx=(300, 0))
 
         max_speed_label = tk.Label(self.root, text="Max Speed:")
         max_speed_label.grid(row=8, column=0, padx=(0, 200))
@@ -198,13 +199,13 @@ class ControlPanel:
     def move_forward(self):
         if self.selected_ball:
             speed = self.max_speed_value.get()
-            data = {'speed' : speed}
+            data = {'speed': speed}
             self.selected_ball.action(ActionType.FORWARD, data)
 
     def move_backward(self):
         if self.selected_ball:
             speed = self.max_speed_value.get()
-            data = {'speed' : speed}
+            data = {'speed': speed}
             self.selected_ball.action(ActionType.BACKWARD, data)
 
     def move_to(self, data):

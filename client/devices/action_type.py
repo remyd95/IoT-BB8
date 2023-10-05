@@ -6,6 +6,7 @@ class ActionType(Enum):
     FORWARD = 1
     BACKWARD = 2
     STOP = 3
+    UNDEFINED = -1
 
 
 def get_action_from_value(value):
