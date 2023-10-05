@@ -14,4 +14,4 @@ def get_action_from_value(value):
     for action in ActionType:
         if action.value == value:
             return action
-    return -1
+    return ActionType.UNDEFINED
