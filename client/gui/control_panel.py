@@ -113,6 +113,7 @@ class ControlPanel:
                     self.selected_ball.target_obj = (
                         self.canvas.create_line(event.x - 10, event.y, event.x + 10, event.y, fill="red"),
                         self.canvas.create_line(event.x, event.y - 10, event.x, event.y + 10, fill="red"))
+
                     print(f"[GUI] Set ball target location to: ({grid_x:.2f}, {grid_y:.2f})")
         else:
             print("[GUI] Selection not in grid")
@@ -125,6 +126,9 @@ class ControlPanel:
             self.grid_position.config(text="Cursor not in grid")
 
     def on_ball_select(self, event):
+        if self.initial_ball_warning:
+            self.initial_ball_warning.destroy()
+
         selected_ball = self.ball_selector_value.get()
         print("[GUI] Selected ball:", selected_ball)
 
@@ -138,8 +142,6 @@ class ControlPanel:
                                                          bg="red",
                                                          fg="white")
                     self.initial_ball_warning.grid(row=1, column=0)
-                else:
-                    self.initial_ball_warning.destroy()
                 return
 
     def register_ball(self, ball_id, mqtt_connector):
@@ -152,9 +154,9 @@ class ControlPanel:
         else:
             print("[GUI] Duplicate ball registration: " + str(ball_id))
 
-    def update_state(self, ball_id, state_update):
+    def update_state(self, ball_name, state_update):
         for ball in self.balls:
-            if ball.name == ball_id:
+            if ball.name == ball_name:
                 if ball.gui_obj:
                     ball.x_pos = state_update['x']
                     ball.y_pos = state_update['y']
@@ -180,7 +182,7 @@ class ControlPanel:
                     position_label = self.canvas.create_text(x_canvas, y_canvas,
                                                              text=f"({ball.x_pos:.2f}, {ball.y_pos:.2f})")
                     ball.set_position_label(position_label)
-                print(f"[GUI] New state of {ball_id} is {ball.x_pos}, {ball.y_pos}, {ball.cur_action}")
+                    print(f"[GUI] New state of {ball_name} is {ball.x_pos}, {ball.y_pos}, {ball.cur_action}")
                 return
 
     def create_buttons(self):
@@ -262,25 +264,35 @@ class ControlPanel:
 
     def delete_selected_ball(self):
         if self.selected_ball:
-            if self.selected_ball.gui_obj:
-                self.canvas.delete(self.selected_ball.gui_obj)
-                self.canvas.delete(self.selected_ball.position_label)
-            else:
-                self.initial_ball_warning.destroy()
+            self.delete_ball(self.selected_ball)
 
-            if self.selected_ball.has_target_location:
-                self.canvas.delete(self.selected_ball.target_obj[0])
-                self.canvas.delete(self.selected_ball.target_obj[1])
-                self.selected_ball.target_obj = None
+    def deregister_ball(self, ball_name):
+        for ball in self.balls:
+            if ball.name == ball_name:
+                self.delete_ball(ball)
+                return
 
-            self.balls.remove(self.selected_ball)
-            self.selected_ball.mqtt_connector.unsubscribe(self.selected_ball.name + "/state")
-            self.ball_selector['values'] = [ball.name for ball in self.balls]
+    def delete_ball(self, ball):
+        if ball.gui_obj:
+            self.canvas.delete(ball.gui_obj)
+            self.canvas.delete(ball.position_label)
+
+        if ball.has_target_location:
+            self.canvas.delete(ball.target_obj[0])
+            self.canvas.delete(ball.target_obj[1])
+            ball.target_obj = None
+
+        self.balls.remove(ball)
+        ball.mqtt_connector.unsubscribe(ball.name + "/state")
+        self.ball_selector['values'] = [ball.name for ball in self.balls]
+
+        if self.selected_ball and ball.name == self.selected_ball.name:
+            self.initial_ball_warning.destroy()
             self.ball_selector.set('Select a ball')
             self.max_speed_slider.set(100)
-            print(f"[GUI] Disconnected ball: {self.selected_ball.name}")
             self.selected_ball = None
-            return
+
+        print(f"[GUI] Disconnected ball: {ball.name}")
 
     def on_max_speed_update(self, event):
         if self.selected_ball and self.selected_ball.gui_obj:

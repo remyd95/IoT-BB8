@@ -18,7 +18,9 @@ def main():
     root = tk.Tk()
 
     control_panel = ControlPanel(root)
+
     mqtt_connector.set_register_handler(control_panel.register_ball)
+    mqtt_connector.set_deregister_handler(control_panel.deregister_ball)
     mqtt_connector.set_state_handler(control_panel.update_state)
 
     root.mainloop()
