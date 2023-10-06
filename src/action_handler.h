@@ -8,4 +8,6 @@ void set_forward_action_callback(MotorActionCallback callback);
 void set_backward_action_callback(MotorActionCallback callback);
 void set_stop_action_callback(MotorActionCallback callback);
 
+void move_to(float x, float y, int max_speed);
+
 void process_action(char* event_data);

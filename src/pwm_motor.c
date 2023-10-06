@@ -18,12 +18,12 @@ void pwm_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num) {
 }
 
 void pwm_forward_action(motor_action_data_t motor_action_data) {
-    pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.duty_cycle);
-    pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_1, motor_action_data.duty_cycle);
+    pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.max_speed);
+    pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_1, motor_action_data.max_speed);
 }
 
 void pwm_backward_action(motor_action_data_t motor_action_data) {
-    pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.duty_cycle);
+    pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.max_speed);
 }
 
 void pwm_stop_action(motor_action_data_t motor_action_data) {

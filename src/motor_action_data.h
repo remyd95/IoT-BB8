@@ -2,6 +2,6 @@
 
 typedef struct {
     int motor_id;
-    float duty_cycle;
+    int max_speed;
 } motor_action_data_t;
 

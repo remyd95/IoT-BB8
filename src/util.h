@@ -3,15 +3,15 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-static float clip_duty_cycle(float duty_cycle) {
-    float bounded_duty_cycle = 0;
+static int bound_max_speed(int max_speed) {
+    float bounded_max_speed = 0;
 
-    if (duty_cycle < 0) {
-        bounded_duty_cycle = 0;
-    } else if (duty_cycle >= 100) {
-        bounded_duty_cycle = 99;
+    if (max_speed < 0) {
+        bounded_max_speed = 0;
+    } else if (max_speed > 100) {
+        bounded_max_speed = 100;
     } else {
-        bounded_duty_cycle = duty_cycle;
+        bounded_max_speed = max_speed;
     }
-    return bounded_duty_cycle;
+    return bounded_max_speed;
 }
