@@ -51,7 +51,7 @@ esp_err_t i2c_write_byte(i2c_port_t i2c_num, uint8_t periph_address, uint8_t reg
  * @param reg_address slave reg address
  * @param data data to read
  * @param data_len data length
- *
+ 200*
  * @return
  *     - ESP_OK Success
  *     - ESP_ERR_INVALID_ARG Parameter error

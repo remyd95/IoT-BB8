@@ -25,8 +25,9 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define SAMPLE_FREQ_Hz 100
+#define SAMPLE_FREQ_Hz 500
 #define SAMPLE_INTERVAL_MS (1000 / SAMPLE_FREQ_Hz) // Sample Rate in milliseconds
+#define BETA 0.7
 
 #define DEG2RAD(deg) (deg * M_PI / 180.0f)
 

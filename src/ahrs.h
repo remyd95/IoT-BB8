@@ -13,6 +13,12 @@
 #ifndef AHRS_H
 #define AHRS_H
 
+//----------------------------------------------------------------------------------------------------
+// Variable declaration
+
+extern volatile float beta;				// algorithm gain
+extern volatile float q0, q1, q2, q3;	// quaternion of sensor frame relative to auxiliary frame
+
 //---------------------------------------------------------------------------------------------------
 // Function declarations
 
@@ -22,6 +28,7 @@ void ahrs_update_imu(float gx, float gy, float gz, float ax, float ay, float az)
 void ahrs_get_euler_in_degrees(float *heading, float *pitch, float *roll);
 void MadgwickGetEulerAngles(float *heading, float *pitch, float *roll);
 void MadgwickGetVector(float *angle, float *x, float *y, float *z);
+float invSqrt(float x);
 
 #endif // AHRS_H
 //=====================================================================================================
