@@ -38,4 +38,4 @@ float get_current_x_pos();
 float get_current_y_pos();
 float get_current_rotation();
 int get_current_action();
-void state_task(void *args);
+void report_state_task(void *args);

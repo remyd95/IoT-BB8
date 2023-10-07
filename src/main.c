@@ -90,7 +90,7 @@ void app_main() {
   init_state_structures();
 
   xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
-  xTaskCreate(state_task, "state_task", 4096, &state_task_data, 10, NULL);
+  xTaskCreate(report_state_task, "state_task", 4096, &state_task_data, 10, NULL);
 
   while (1) {
     test_wifi_connection();
