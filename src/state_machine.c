@@ -2,7 +2,7 @@
 
 volatile float current_x = 0.0;
 volatile float current_y = 0.0;
-volatile float rotation = 0.0;
+volatile float current_rotation = 0.0;
 volatile int current_action = ACTION_IDLE;
 
 void set_current_coordinates(float x, float y) {
@@ -10,8 +10,8 @@ void set_current_coordinates(float x, float y) {
     current_y = y;
 }
 
-void set_current_rotation(float nrotation) {
-    rotation = nrotation;
+void set_current_rotation(float rotation) {
+    current_rotation = rotation;
 }
 
 void set_current_action(int action) {
@@ -27,7 +27,7 @@ float get_current_y_pos() {
 }
 
 float get_current_rotation() {
-    return rotation;
+    return current_rotation;
 }
 
 int get_current_action() {
