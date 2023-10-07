@@ -1,5 +1,8 @@
 #include "location.h"
 
+volatile float current_x = 0.0;
+volatile float current_y = 0.0;
+
 void set_current_coordinates(float x, float y) {
     current_x = x;
     current_y = y;

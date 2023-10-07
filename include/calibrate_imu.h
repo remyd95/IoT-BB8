@@ -16,26 +16,8 @@
  *                                                                           *
  *****************************************************************************/
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#pragma once
 
-#include "common.h"
-
-void pause_sample(void)
-{
-
-  static uint64_t start = 0;
-  uint64_t end = xTaskGetTickCount() * 1000 / configTICK_RATE_HZ;
-
-  if (start == 0)
-  {
-    start = xTaskGetTickCount() / configTICK_RATE_HZ;
-  }
-
-  int32_t elapsed = end - start;
-  if (elapsed < SAMPLE_INTERVAL_MS)
-  {
-    vTaskDelay((SAMPLE_INTERVAL_MS - elapsed) / portTICK_PERIOD_MS);
-  }
-  start = xTaskGetTickCount() * 1000 / configTICK_RATE_HZ;
-}
+void calibrate_gyro(void);
+void calibrate_accel(void);
+void calibrate_mag(void);

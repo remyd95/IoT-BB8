@@ -23,8 +23,6 @@
 #include "mpu9250.h"
 #include "ak8963.h"
 
-#define I2C_MASTER_SCL_IO 22     /*!< gpio number for I2C master clock */
-#define I2C_MASTER_SDA_IO 21     /*!< gpio number for I2C master data  */
 #define I2C_MASTER_NUM I2C_NUM_0 /*!< I2C port number for master dev */
 
 static const char *TAG = "mpu9250";
@@ -44,12 +42,12 @@ typedef struct
 
 static esp_err_t enable_magnetometer(void);
 
-esp_err_t i2c_mpu9250_init(calibration_t *c)
+esp_err_t i2c_mpu9250_init(calibration_t *c, int i2c_master_sda_io, int i2c_master_scl_io)
 {
   ESP_LOGI(TAG, "Initializating MPU9250");
   vTaskDelay(100 / portTICK_PERIOD_MS);
 
-  i2c_master_init(I2C_MASTER_NUM, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);
+  i2c_master_init(I2C_MASTER_NUM, i2c_master_sda_io, i2c_master_scl_io);
 
   if (initialised)
   {

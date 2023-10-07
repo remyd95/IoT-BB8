@@ -26,7 +26,8 @@
 #include "esp_task_wdt.h"
 
 #include "mpu9250.h"
-#include "common.h"
+#include "imu.h"
+#include "calibrate_imu.h"
 
 const char *TAG = "calibrate";
 
@@ -55,7 +56,7 @@ static void init_imu(void)
   static bool init_imu_done = false;
   if (init_imu_done)
     return;
-  i2c_mpu9250_init(&cal);
+  i2c_mpu9250_init(&cal, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);
   init_imu_done = true;
 }
 

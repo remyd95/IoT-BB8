@@ -143,7 +143,7 @@ typedef struct
 
 } calibration_t;
 
-esp_err_t i2c_mpu9250_init(calibration_t *cal);
+esp_err_t i2c_mpu9250_init(calibration_t *c, int i2c_master_sda_io, int i2c_master_scl_io);
 esp_err_t set_clock_source(uint8_t adrs);
 esp_err_t set_full_scale_gyro_range(uint8_t adrs);
 esp_err_t set_full_scale_accel_range(uint8_t adrs);

@@ -1,5 +1,5 @@
-static float current_x = 0.0;
-static float current_y = 0.0;
+extern volatile float current_x;
+extern volatile float current_y;
 
 
 void set_current_coordinates(float x, float y);

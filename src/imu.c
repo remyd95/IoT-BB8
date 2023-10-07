@@ -1,6 +1,6 @@
 #include "imu.h"
 
-//static const char *TAG = "imu";
+static const char *TAG = "imu";
 
 calibration_t cal = {
     .mag_offset = {.x = -8.394531, .y = 4.224609, .z = 19.142578},
@@ -43,9 +43,26 @@ static void transform_mag(vector_t *v) {
   v->z = -x;
 }
 
+void pause_sample(void) {
+  static uint64_t start = 0;
+  uint64_t end = xTaskGetTickCount() * 1000 / configTICK_RATE_HZ;
+
+  if (start == 0)
+  {
+    start = xTaskGetTickCount() / configTICK_RATE_HZ;
+  }
+
+  int32_t elapsed = end - start;
+  if (elapsed < SAMPLE_INTERVAL_MS)
+  {
+    vTaskDelay((SAMPLE_INTERVAL_MS - elapsed) / portTICK_PERIOD_MS);
+  }
+  start = xTaskGetTickCount() * 1000 / configTICK_RATE_HZ;
+}
+
 static void run_imu(imu_data_t *imu_data) {
 
-  i2c_mpu9250_init(&cal);
+  i2c_mpu9250_init(&cal, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);
   ahrs_init(SAMPLE_FREQ_Hz, BETA);
 
   while (true) {
