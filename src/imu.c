@@ -92,7 +92,9 @@ static void run_imu(imu_data_t *imu_data) {
     imu_data->pitch = pitch;
     imu_data->roll = roll;
     imu_data->temp = temp;
-      
+    
+    set_current_rotation(heading);
+
     pause_sample();
   }
 }

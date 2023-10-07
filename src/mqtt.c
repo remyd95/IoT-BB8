@@ -6,6 +6,7 @@
 
 const char *MQTT_TAG = "test";
 char BALL_NAME[12];
+static bool mqtt_client_connected = false;
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)event_data;
@@ -14,6 +15,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(MQTT_TAG, "MQTT connected");
+
+            mqtt_client_connected = true; 
 
             // Generate a random 6-digit ID
             int random_id = rand() % 900000 + 100000;
@@ -35,6 +38,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(MQTT_TAG, "MQTT disconnected");
+            mqtt_client_connected = false; 
             break;
         
         case MQTT_EVENT_DATA:
@@ -64,6 +68,10 @@ void init_mqtt(esp_mqtt_client_handle_t *client, const char* broker_uri) {
     esp_mqtt_client_start(*client);
 }
 
-void publish_message(esp_mqtt_client_handle_t client, const char *topic, const char *message) {
-    esp_mqtt_client_publish(client, topic, message, 0, 0, 0);
+void mqtt_publish_message(esp_mqtt_client_handle_t client, const char *message) {
+     if (mqtt_client_connected) {
+        char state_topic[30];
+        snprintf(state_topic, sizeof(state_topic), "%s/state", BALL_NAME);
+        esp_mqtt_client_publish(client, state_topic, message, 0, 0, 0);
+    }
 }

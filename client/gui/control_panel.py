@@ -287,7 +287,7 @@ class ControlPanel:
                                                               fill="green", arrow=tk.LAST, width=arrow_width)
                     ball.set_direction_object(direction_arrow)
 
-                    print(f"[GUI] New state of {ball_name} is {ball.x_pos}, {ball.y_pos}, {ball.cur_action}")
+                    print(f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, rotation={ball.rotation}. {ball.cur_action}")
                 return
 
     def register_ball(self, ball_id, mqtt_connector):

@@ -4,6 +4,7 @@
 #include "mpu9250.h"
 #include "calibrate_imu.h"
 #include "common.h"
+#include "state_machine.h"
 #include <esp_log.h>
 #include <math.h>
 
