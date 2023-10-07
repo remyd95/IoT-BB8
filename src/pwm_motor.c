@@ -30,9 +30,7 @@ void pwm_stop_action(motor_action_data_t motor_action_data) {
     pwm_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
 }
 
-
 void pwm_configure_motors(void) {
-
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, MOTOR1_PIN1);
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, MOTOR1_PIN2);
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM1A, MOTOR2_PIN1);
@@ -48,5 +46,4 @@ void pwm_configure_motors(void) {
 
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); 
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_1, &pwm_config); 
-
 }

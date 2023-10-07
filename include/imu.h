@@ -29,5 +29,4 @@ typedef struct {
 } imu_data_t;
 
 void imu_task(void *args);
-
 void pause_sample(void);

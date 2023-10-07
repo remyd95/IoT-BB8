@@ -2,7 +2,6 @@
 
 const int CONNECTED_BIT = BIT0;
 const int NUM_RETRIES = 0;
-
 int retry_num = 0;
 
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
@@ -20,7 +19,8 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
 
         //TODO: Stop ANY action when we lose connection 
 
-        if (retry_num < 5) { // Stop after some retries because this drains the battery!
+        while (retry_num < 5) { // Stop after some retries because this drains the battery!
+            vTaskDelay(5000 / portTICK_PERIOD_MS);
             esp_wifi_connect();\
             retry_num++;
             printf("Retrying to establish outgoing connection...\n");

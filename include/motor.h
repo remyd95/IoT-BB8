@@ -12,5 +12,4 @@
 void forward_action(motor_action_data_t motor_action_data);
 void backward_action(motor_action_data_t motor_action_data);
 void stop_action(motor_action_data_t motor_action_data);
-
 void configure_motors(void);

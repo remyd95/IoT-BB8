@@ -1,6 +1,5 @@
 #include "motor.h"
 
-
 void forward_motion_action(motor_action_data_t motor_action_data) {
     if (motor_action_data.motor_id == 1) {
         gpio_set_level(MOTOR1_PIN1, 1);

@@ -1,6 +1,6 @@
 #include "action_handler.h"
 #include "util.h"
-#include "location.h"
+#include "state_machine.h"
 
 #include <math.h>
 #include <string.h>
@@ -10,7 +10,6 @@
 static MotorActionCallback forward_callback = NULL;
 static MotorActionCallback backward_callback = NULL;
 static MotorActionCallback stop_callback = NULL;
-
 
 void set_forward_action_callback(MotorActionCallback callback) {
     forward_callback = callback;
@@ -33,8 +32,8 @@ void move_to(float x, float y, int max_speed) {
 
 
 void process_action(char* event_data){
-
     motor_action_data_t motor_action_data;
+
     if (strncmp(event_data, "FW", 2) == 0) {
         int max_speed;
 
@@ -61,5 +60,4 @@ void process_action(char* event_data){
             move_to(x, y, max_speed);
         }
     }
-
 }
