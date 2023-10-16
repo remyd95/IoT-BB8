@@ -1,14 +1,12 @@
 #include "imu.h"
 
-static const char *TAG = "imu";
-
 calibration_t cal = {
-    .mag_offset = {.x = -8.394531, .y = 4.224609, .z = 19.142578},
-    .mag_scale = {.x = 1.011759, .y = 1.016019, .z = 0.973342},
-    .accel_offset = {.x = 0.021837, .y = 0.043132, .z = -0.144693},
-    .accel_scale_lo = {.x = 1.011026, .y = 1.013828, .z = 0.974942},
-    .accel_scale_hi = {.x = -0.987007, .y = -0.980326, .z = -1.048787},
-    .gyro_bias_offset = {.x = 0.582807, .y = 0.661291, .z = -1.661415}
+    .mag_offset = {.x = 10.193359, .y = -19.312500, .z = 33.644531},
+    .mag_scale = {.x = 0.986733, .y = 1.013024, .z = 1.000590},
+    .accel_offset = {.x = 0.030903, .y = 0.095585, .z = -0.122952},
+    .accel_scale_lo = {.x = 1.009745, .y = 1.015059, .z = 0.975763},
+    .accel_scale_hi = {.x = -0.985120, .y = -0.985946, .z = -1.045682},
+    .gyro_bias_offset = {.x = 0.365409, .y = 0.333483, .z = -1.597020}
 };
 
 /**
@@ -24,8 +22,8 @@ static void transform_accel_gyro(vector_t *v) {
   float z = v->z;
 
   v->x = -x;
-  v->y = -z;
-  v->z = -y;
+  v->y = -y;
+  v->z = z;
 }
 
 /**
@@ -39,8 +37,8 @@ static void transform_mag(vector_t *v) {
   float z = v->z;
 
   v->x = -y;
-  v->y = z;
-  v->z = -x;
+  v->y = -x;
+  v->z = -z;
 }
 
 void pause_sample(void) {
@@ -86,14 +84,14 @@ static void run_imu(imu_data_t *imu_data) {
     
     float heading, pitch, roll;
     ahrs_get_euler_in_degrees(&heading, &pitch, &roll);
-    //ESP_LOGI(TAG, "heading: %2.3f°, pitch: %2.3f°, roll: %2.3f°, Temp %2.3f°C", heading, pitch, roll, temp);
+    //ESP_LOGI("imu", "heading: %2.3f°, pitch: %2.3f°, roll: %2.3f°, Temp %2.3f°C", heading, pitch, roll, temp);
 
     imu_data->heading = heading;
     imu_data->pitch = pitch;
     imu_data->roll = roll;
     imu_data->temp = temp;
-    
-    set_current_rotation(heading);
+    imu_data->accelx = va.x;
+    imu_data->accely = va.y;
 
     pause_sample();
   }

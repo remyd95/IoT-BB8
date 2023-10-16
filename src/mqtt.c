@@ -3,9 +3,11 @@
 
 #include <stdio.h>
 #include <esp_log.h>
+#include <time.h>
 
 const char *MQTT_TAG = "test";
 char BALL_NAME[12];
+char ACTION_TOPIC[30];
 static bool mqtt_client_connected = false;
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
@@ -18,6 +20,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
             mqtt_client_connected = true; 
 
+            srand(time(NULL));
             // Generate a random 6-digit ID
             int random_id = rand() % 900000 + 100000;
 
@@ -30,9 +33,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             snprintf(BALL_NAME, sizeof(BALL_NAME), "ball%d", random_id);
 
             // Subscribe to the "ball<ID>/action" topic
-            char action_topic[30];
-            snprintf(action_topic, sizeof(action_topic), "%s/action", BALL_NAME);
-            esp_mqtt_client_subscribe(client, action_topic, 0);
+            snprintf(ACTION_TOPIC, sizeof(ACTION_TOPIC), "%s/action", BALL_NAME);
+            esp_mqtt_client_subscribe(client, ACTION_TOPIC, 0);
 
             break;
         
@@ -47,7 +49,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
 
-            if (strncmp(event->topic, MQTT_TAG, strlen(MQTT_TAG)) == 0) {
+            if (strncmp(event->topic, ACTION_TOPIC, strlen(MQTT_TAG)) == 0) {
                 process_action(event->data);
             }
             break;

@@ -59,5 +59,12 @@ void process_action(char* event_data){
 
             move_to(x, y, max_speed);
         }
+    } else if (strncmp(event_data, "IN", 2) == 0) {
+        float x, y;
+        if (sscanf(event_data, "IN %f %f", &x, &y) == 2) {
+            set_current_coordinates(x, y);
+            printf("%f\n", get_current_x_pos());
+            printf("%f\n", get_current_y_pos());
+        }
     }
 }

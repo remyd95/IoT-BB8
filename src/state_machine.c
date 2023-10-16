@@ -34,7 +34,7 @@ int get_current_action() {
     return current_action;
 }
 
-void state_task(void *args) {
+void report_state_task(void *args) {
     state_task_data_t *state_task_data = (state_task_data_t*)args;    
     esp_mqtt_client_handle_t mqtt_client = state_task_data->mqtt_client;
     state_machine_data_t *state_machine_data = &(state_task_data->state_machine_data);

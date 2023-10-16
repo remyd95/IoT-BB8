@@ -73,7 +73,7 @@ static void init_imu(void) {
  * NOTE: The Gyro must not be moved during this process.
  *
  */
-const int NUM_GYRO_READS = 5000;
+const int NUM_GYRO_READS = 20000;
 
 void calibrate_gyro(void) {
   init_imu();

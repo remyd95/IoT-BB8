@@ -6,10 +6,10 @@
 #include "motor_action_data.h"
 
 // Define motor pins
-#define MOTOR1_PIN1 GPIO_NUM_1
-#define MOTOR1_PIN2 GPIO_NUM_2
-#define MOTOR2_PIN1 GPIO_NUM_3
-#define MOTOR2_PIN2 GPIO_NUM_4
+#define MOTORA_PINA GPIO_NUM_1
+#define MOTORA_PINB GPIO_NUM_4
+#define MOTORB_PINA GPIO_NUM_3
+#define MOTORB_PINB GPIO_NUM_2
 
 void pwm_motor_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle);
 void pwm_motor_backward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle);
