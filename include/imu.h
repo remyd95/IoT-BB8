@@ -13,12 +13,12 @@
 #endif
 
 // ESP32
-// #define I2C_MASTER_SCL_IO 22     /*!< gpio number for I2C master clock */
-// #define I2C_MASTER_SDA_IO 21     /*!< gpio number for I2C master data  */
+#define I2C_MASTER_SCL_IO 22     /*!< gpio number for I2C master clock */
+#define I2C_MASTER_SDA_IO 21     /*!< gpio number for I2C master data  */
 
 //ESP32-S3
-#define I2C_MASTER_SCL_IO GPIO_NUM_6     /*!< gpio number for I2C master clock */
-#define I2C_MASTER_SDA_IO GPIO_NUM_5     /*!< gpio number for I2C master data  */
+//#define I2C_MASTER_SCL_IO GPIO_NUM_6     /*!< gpio number for I2C master clock */
+//#define I2C_MASTER_SDA_IO GPIO_NUM_5     /*!< gpio number for I2C master data  */
 
 #define I2C_MASTER_NUM I2C_NUM_0
 //#define CONFIG_CALIBRATION_MODE

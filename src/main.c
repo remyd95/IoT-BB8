@@ -30,8 +30,8 @@
 #include "lwip/sys.h"
 #include "lwip/err.h"
 
-#define LED_PIN GPIO_NUM_21 // ONBOARD LED PIN FOR ESP32-S3
-//#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32-S3
+//#define LED_PIN GPIO_NUM_21 // ONBOARD LED PIN FOR ESP32-S3
+#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32
 
 // WiFi
 const char* ssid = "Phone";
@@ -99,7 +99,7 @@ void app_main() {
 
   init_state_structures();
 
-  xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
+  //xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
   xTaskCreate(report_state_task, "state_task", 4096, &state_task_data, 10, NULL);
  
   TickType_t last_wakeup_time = xTaskGetTickCount(); 

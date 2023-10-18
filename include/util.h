@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-static int bound_max_speed(int max_speed) {
+static float bound_max_speed(float max_speed) {
     float bounded_max_speed = 0;
 
     if (max_speed < 0) {

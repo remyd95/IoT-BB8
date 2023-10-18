@@ -26,7 +26,7 @@ void set_stop_action_callback(MotorActionCallback callback) {
     //TODO add action to priority task queue (HIGH PRIO)
 }
 
-void move_to(float x, float y, int max_speed) {
+void move_to(float x, float y, float max_speed) {
     //TODO add action to priority task queue
 }
 
@@ -35,18 +35,18 @@ void process_action(char* event_data){
     motor_action_data_t motor_action_data;
 
     if (strncmp(event_data, "FW", 2) == 0) {
-        int max_speed;
+        float max_speed;
 
-        if (sscanf(event_data, "FW %d", &max_speed) == 1) {
-            int bounded_max_speed = bound_max_speed(max_speed);
+        if (sscanf(event_data, "FW %f", &max_speed) == 1) {
+            float bounded_max_speed = bound_max_speed(max_speed);
             motor_action_data.max_speed = bounded_max_speed;
             forward_callback(motor_action_data);
         }
     } else if (strncmp(event_data, "BW", 2) == 0) {
-        int max_speed;
+        float max_speed;
 
-        if (sscanf(event_data, "BW %d", &max_speed) == 1) {
-            int bounded_max_speed = bound_max_speed(max_speed);
+        if (sscanf(event_data, "BW %f", &max_speed) == 1) {
+            float bounded_max_speed = bound_max_speed(max_speed);
             motor_action_data.max_speed = bounded_max_speed;
             backward_callback(motor_action_data);
         }
