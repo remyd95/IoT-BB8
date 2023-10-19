@@ -297,7 +297,7 @@ class ControlPanel:
                     ball.set_direction_object(direction_arrow)
 
                     print(f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, rotation={ball.rotation}. {ball.cur_action}")
-                elif create_ball:
+                elif create_ball and get_action_from_value(state_update['action']) != ActionType.INIT:
                     canvas_x, canvas_y = self.grid_to_canvas_coords(state_update['x'], state_update['y'])
                     data = {'x': state_update['x'], 'y': state_update['y']}
 
