@@ -36,16 +36,16 @@
 // WiFi
 const char* ssid = "Phone";
 const char* password =  "wifi1234";
-EventGroupHandle_t wifi_event_group;
 
 // MQTT
 const char* broker_uri = "mqtt://duijsens.dev";
 esp_mqtt_client_handle_t mqtt_client;
 
+// Flags
+EventGroupHandle_t connection_event_group;
+
 // IMU
 imu_data_t imu_data;
-state_machine_data_t state_machine_data;
-state_task_data_t state_task_data;
 
 // State TEMP
 const float timeStep = 0.05;
@@ -61,26 +61,22 @@ static void configure_led(void) {
     gpio_set_direction(LED_PIN, GPIO_MODE_INPUT_OUTPUT);
 }
 
-void test_wifi_connection() {
-    // WiFi connected, turn on the LED
-    if (xEventGroupGetBits(wifi_event_group) & CONNECTED_BIT) {
-        if (!gpio_get_level(LED_PIN)) {
-            gpio_set_level(LED_PIN, 1);
+void test_connection_task(void *args) {
+    EventGroupHandle_t connection_event = (EventGroupHandle_t*)args;   
+
+    while(1) {
+        // WiFi connected, turn on the LED
+        if (xEventGroupGetBits(connection_event) & WIFI_CONNECTED_BIT) {
+            if (!gpio_get_level(LED_PIN)) {
+                gpio_set_level(LED_PIN, 1);
+            }
+        // WiFi not connected, turn off the LED
+        } else {
+            gpio_set_level(LED_PIN, 0);
         }
-    // WiFi not connected, turn off the LED
-    } else {
-        gpio_set_level(LED_PIN, 0);
+
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
-}
-
-void init_state_structures() {
-    state_machine_data.current_x = 0.0;
-    state_machine_data.current_y = 0;
-    state_machine_data.rotation = 0.0;
-    state_machine_data.current_action = ACTION_INIT;
-
-    state_task_data.mqtt_client = mqtt_client;
-    state_task_data.state_machine_data = state_machine_data;
 }
 
 void app_main() {
@@ -89,23 +85,23 @@ void app_main() {
   configure_led();
   pwm_configure_motors();
 
-  init_wifi(&wifi_event_group, ssid, password);
+  connection_event_group = xEventGroupCreate();
+
+  init_wifi(&connection_event_group, ssid, password);
 
   set_forward_action_callback(pwm_forward_action);
   set_backward_action_callback(pwm_backward_action);
   set_stop_action_callback(pwm_stop_action);
 
-  init_mqtt(&mqtt_client, broker_uri);
-
-  init_state_structures();
+  init_mqtt(&connection_event_group, &mqtt_client, broker_uri);
 
   xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
-  xTaskCreate(report_state_task, "state_task", 4096, &state_task_data, 10, NULL);
- 
+  xTaskCreate(report_state_task, "state_task", 4096, &mqtt_client, 10, NULL);
+  xTaskCreate(test_connection_task, "imu_task", 4096, &connection_event_group, 10, NULL);
+
   TickType_t last_wakeup_time = xTaskGetTickCount(); 
 
   while (1) {
-    test_wifi_connection();
 
     if (current_action != ACTION_INIT) {
         float yaw = imu_data.heading;
@@ -123,7 +119,6 @@ void app_main() {
 
         set_current_coordinates(new_x, new_y);
         set_current_rotation(yaw);
-
 
         TickType_t current_time = xTaskGetTickCount();
         float elapsed_time = (current_time - last_wakeup_time) * portTICK_PERIOD_MS / 1000.0;

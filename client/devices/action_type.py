@@ -8,7 +8,8 @@ class ActionType(Enum):
     BACKWARD = 3
     STOP = 4
     INIT = 5
-    DISCONNECT = 6
+    REBOOT = 6
+    FIND_AVAILABLE = 7
     UNDEFINED = -1
 
 

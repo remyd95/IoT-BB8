@@ -10,8 +10,9 @@ BASE_COLOR = "white"
 
 
 class ControlPanel:
-    def __init__(self, root):
+    def __init__(self, root, CLIENT_ID):
         # General tkinter settings
+        self.client_id = CLIENT_ID
         self.root = root
         self.root.title("Control Panel IotBB8")
 
@@ -376,7 +377,7 @@ class ControlPanel:
 
     def disconnect(self):
         if self.selected_ball:
-            self.selected_ball.action(ActionType.DISCONNECT)
+            pass
 
     def stop_movement(self):
         if self.selected_ball:

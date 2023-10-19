@@ -63,7 +63,7 @@ static void run_imu(imu_data_t *imu_data) {
   i2c_mpu9250_init(&cal, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);
   ahrs_init(SAMPLE_FREQ_Hz, BETA);
 
-  while (true) {
+  while (1) {
     vector_t va, vg, vm;
 
     // Get the Accelerometer, Gyroscope and Magnetometer values.

@@ -40,14 +40,16 @@ class Ball:
 
     def action(self, action_type, data=None):
         if action_type == ActionType.FORWARD:
-            self.mqtt_connector.publish(self.topic, f"FW {data['speed']}")
+            self.mqtt_connector.publish(self.topic, f"FW {float(data['speed'])}")
         elif action_type == ActionType.BACKWARD:
-            self.mqtt_connector.publish(self.topic, f"BW {data['speed']}")
+            self.mqtt_connector.publish(self.topic, f"BW {float(data['speed'])}")
         elif action_type == ActionType.STOP:
             self.mqtt_connector.publish(self.topic, "ST")
+        elif action_type == ActionType.REBOOT:
+            self.mqtt_connector.publish(self.topic, "RB")
+        elif action_type == ActionType.FIND_AVAILABLE:
+            self.mqtt_connector.publish(self.topic, f"FA {data['client_id']}")
         elif action_type == ActionType.MOVETO:
-            self.mqtt_connector.publish(self.topic, f"MV {data['x']} {data['y']} {data['speed']}")
+            self.mqtt_connector.publish(self.topic, f"MV {data['x']} {data['y']} {float(data['speed'])}")
         elif action_type == ActionType.INIT:
             self.mqtt_connector.publish(self.topic, f"IN {data['x']} {data['y']}")
-        elif action_type == ActionType.DISCONNECT:
-            self.mqtt_connector.publish(self.topic, "DC")
