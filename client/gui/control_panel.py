@@ -10,11 +10,12 @@ BASE_COLOR = "white"
 
 
 class ControlPanel:
-    def __init__(self, root, CLIENT_ID):
+    def __init__(self, root, client_id, mqtt_connector):
         # General tkinter settings
-        self.client_id = CLIENT_ID
+        self.client_id = client_id
         self.root = root
         self.root.title("Control Panel IotBB8")
+        self.mqtt_connector = mqtt_connector
 
         # Registered ball storage
         self.balls = list()
@@ -110,6 +111,12 @@ class ControlPanel:
         stop_button = tk.Button(self.root, text="Stop", command=self.stop_movement)
         stop_button.grid(row=4, column=0, padx=(300, 0))
 
+        reboot_button = tk.Button(self.root, text="Reboot", command=self.reboot)
+        reboot_button.grid(row=5, column=0, padx=(0, 350))
+
+        find_available_button = tk.Button(self.root, text="Find Available", command=self.find_available)
+        find_available_button.grid(row=5, column=0, padx=(0, 100))
+
         max_speed_label = tk.Label(self.root, text="Max Speed:")
         max_speed_label.grid(row=8, column=0, padx=(0, 200))
 
@@ -194,8 +201,9 @@ class ControlPanel:
                     # Send initial position to ball
                     self.init_position(data)
 
-                    # Remove first placement warning after placement
-                    self.initial_ball_warning.destroy()
+                    # Remove first placement warning after
+                    if self.initial_ball_warning:
+                        self.initial_ball_warning.destroy()
                     print(f"[GUI] Set initial ball location to: ({grid_x:.2f}, {grid_y:.2f})")
                 else:
                     if self.selected_ball.has_target_location:
@@ -240,7 +248,7 @@ class ControlPanel:
             new_max_speed = self.max_speed_value.get()
             self.selected_ball.max_speed = new_max_speed
 
-    def update_state(self, ball_name, state_update):
+    def update_state(self, ball_name, state_update, create_ball=False):
         for ball in self.balls:
             if ball.name == ball_name:
                 if ball.gui_obj:
@@ -289,18 +297,43 @@ class ControlPanel:
                     ball.set_direction_object(direction_arrow)
 
                     print(f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, rotation={ball.rotation}. {ball.cur_action}")
+                elif create_ball:
+                    canvas_x, canvas_y = self.grid_to_canvas_coords(state_update['x'], state_update['y'])
+                    data = {'x': state_update['x'], 'y': state_update['y']}
+
+                    if ball.gui_obj is None:
+                        # Create ball object for the first time
+                        ball_obj = self.canvas.create_oval(canvas_x - 10,
+                                                           canvas_y - 10,
+                                                           canvas_x + 10,
+                                                           canvas_y + 10,
+                                                           fill=BALL_COLOR)
+                        ball.set_gui_object(ball_obj)
+
+                        # Create position marker for the first time
+                        position_label = self.canvas.create_text(canvas_x, canvas_y + 15,
+                                                                 text=f"{ball.name}\n({state_update['x']:.2f}, {state_update['y']:.2f})",
+                                                                 anchor="n", state="hidden")
+                        ball.set_position_label(position_label)
+
+                        # Set hover functionality to show and hide the ball position label
+                        self.tag_bind_position_label(ball)
+
+                        # Update believes about current position
+                        ball.x_pos = state_update['x']
+                        ball.y_pos = state_update['y']
                 return
 
-    def register_ball(self, ball_id, mqtt_connector):
+    def register_ball(self, ball_id):
         # If ball not yet registered
         if all(ball_id != ball.id for ball in self.balls):
-            registered_ball = Ball(ball_id, mqtt_connector)
+            registered_ball = Ball(ball_id)
             registered_ball.set_gui_object(None)
 
             self.balls.append(registered_ball)
             self.ball_selector['values'] = [ball.name for ball in self.balls]
 
-            registered_ball.mqtt_connector.subscribe(registered_ball.name + "/state")
+            self.mqtt_connector.subscribe(registered_ball.name + "/state")
         else:
             print("[GUI] Duplicate ball registration: " + str(ball_id))
 
@@ -333,7 +366,7 @@ class ControlPanel:
 
         # Remove internal data of ball
         self.balls.remove(ball)
-        ball.mqtt_connector.unsubscribe(ball.name + "/state")
+        self.mqtt_connector.unsubscribe(ball.name + "/state")
         self.disconnect()
 
         # Refresh ball selector list
@@ -341,7 +374,8 @@ class ControlPanel:
 
         # Reset GUI components if deleted ball was currently selected
         if self.selected_ball and ball.name == self.selected_ball.name:
-            self.initial_ball_warning.destroy()
+            if self.initial_ball_warning:
+                self.initial_ball_warning.destroy()
             self.ball_selector.set('Select a ball')
             self.max_speed_slider.set(100)
             self.selected_ball = None
@@ -355,7 +389,7 @@ class ControlPanel:
                 return
             speed = self.max_speed_value.get()
             data = {'speed': speed}
-            self.selected_ball.action(ActionType.FORWARD, data)
+            self.selected_ball.action(ActionType.FORWARD, self.mqtt_connector, data)
 
     def move_backward(self):
         if self.selected_ball:
@@ -364,21 +398,28 @@ class ControlPanel:
                 return
             speed = self.max_speed_value.get()
             data = {'speed': speed}
-            self.selected_ball.action(ActionType.BACKWARD, data)
+            self.selected_ball.action(ActionType.BACKWARD, self.mqtt_connector, data)
 
     def move_to(self, data):
         if self.selected_ball:
             data['speed'] = self.max_speed_value.get()
-            self.selected_ball.action(ActionType.MOVETO, data)
+            self.selected_ball.action(ActionType.MOVETO, self.mqtt_connector, data)
 
     def init_position(self, data):
         if self.selected_ball:
-            self.selected_ball.action(ActionType.INIT, data)
+            self.selected_ball.action(ActionType.INIT, self.mqtt_connector, data)
 
     def disconnect(self):
         if self.selected_ball:
             pass
 
+    def reboot(self):
+        if self.selected_ball:
+            self.selected_ball.action(ActionType.REBOOT, self.mqtt_connector)
+
+    def find_available(self):
+        self.mqtt_connector.find_available_balls(self.client_id)
+
     def stop_movement(self):
         if self.selected_ball:
-            self.selected_ball.action(ActionType.STOP)
+            self.selected_ball.action(ActionType.STOP, self.mqtt_connector)

@@ -4,12 +4,12 @@ import tkinter as tk
 from connector.mqtt import MQTTClient
 from gui.control_panel import ControlPanel
 
-
 MQTT_BROKER = "duijsens.dev"
 MQTT_PORT = 1883
 MQTT_KEEPALIVE = 60
 
 CLIENT_ID = random.randint(100000, 999999)
+
 
 def main():
     print("Starting Client Application..")
@@ -19,7 +19,7 @@ def main():
 
     root = tk.Tk()
 
-    control_panel = ControlPanel(root, CLIENT_ID)
+    control_panel = ControlPanel(root, CLIENT_ID, mqtt_connector)
 
     mqtt_connector.set_register_handler(control_panel.register_ball)
     mqtt_connector.set_deregister_handler(control_panel.deregister_ball)

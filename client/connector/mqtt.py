@@ -4,7 +4,7 @@ import time
 
 import paho.mqtt.client as mqtt
 
-TIMEOUT_MS = 60000
+TIMEOUT_MS = 30000
 
 
 class MQTTClient:
@@ -43,26 +43,36 @@ class MQTTClient:
     def on_mqtt_message(self, client, userdata, msg):
         if msg.topic == "register":
             if self.register_handler:
-                payload = msg.payload.decode('utf-8')
+                payload = msg.payload.decode('utf-8').split()
                 pattern = r"^\d{6}$"
 
-                if re.match(pattern, payload):
-                    ball_id = payload
-
-                    self.last_state_update["ball" + str(ball_id)] = time.time()
-                    self.register_handler(ball_id, self)
+                if len(payload) >= 1:
+                    ball_name = None
+                    if re.match(pattern, payload[0]):
+                        ball_id = payload[0]
+                        ball_name = "ball" + str(ball_id)
+                        self.last_state_update[ball_name] = time.time()
+                        self.register_handler(ball_id)
+                    if ball_name is not None and len(payload) == 5:
+                        print("test")
+                        x = float(payload[1])
+                        y = float(payload[2])
+                        rotation = float(payload[3])
+                        action = int(payload[4])
+                        state_update = {'x': x, 'y': y, 'rotation': rotation, 'action': action}
+                        self.state_handler(ball_name, state_update, create_ball=True)
                 else:
                     print("Invalid payload format: Expected ball id of 6 digits.")
         elif msg.topic.startswith("ball") and msg.topic.endswith("state"):
             ball_name = msg.topic.split('/')[0]
-            payload_numbers = msg.payload.decode('utf-8').split()
+            payload = msg.payload.decode('utf-8').split()
 
-            if len(payload_numbers) == 4:
+            if len(payload) == 4:
                 try:
-                    x = float(payload_numbers[0])
-                    y = float(payload_numbers[1])
-                    rotation = float(payload_numbers[2])
-                    action = int(payload_numbers[3])
+                    x = float(payload[0])
+                    y = float(payload[1])
+                    rotation = float(payload[2])
+                    action = int(payload[3])
 
                     state_update = {'x': x, 'y': y, 'rotation': rotation, 'action': action}
 
@@ -78,7 +88,7 @@ class MQTTClient:
         inactive_balls = []
 
         for ball_name, last_update_time in self.last_state_update.items():
-            if current_time - last_update_time > TIMEOUT_MS//1000:
+            if current_time - last_update_time > TIMEOUT_MS // 1000:
                 inactive_balls.append(ball_name)
 
         for ball_name in inactive_balls:
@@ -110,3 +120,6 @@ class MQTTClient:
     def publish(self, mqtt_topic, message):
         print(f"[MQTT] Sent {message} to {mqtt_topic}")
         self.client.publish(mqtt_topic, message)
+
+    def find_available_balls(self, client_id):
+        self.publish("id", str("FA ") + str(client_id))

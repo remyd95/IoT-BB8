@@ -9,7 +9,6 @@ class ActionType(Enum):
     STOP = 4
     INIT = 5
     REBOOT = 6
-    FIND_AVAILABLE = 7
     UNDEFINED = -1
 
 
