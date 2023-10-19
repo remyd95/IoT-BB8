@@ -11,7 +11,6 @@
 #define ACTION_BACKWARD 3
 #define ACTION_STOP 4
 #define ACTION_INIT 5
-#define ACTION_DISCONNECT 6
 #define ACTION_UNDEFINED -1
 
 extern volatile float current_x;

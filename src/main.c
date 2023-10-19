@@ -77,7 +77,7 @@ void init_state_structures() {
     state_machine_data.current_x = 0.0;
     state_machine_data.current_y = 0;
     state_machine_data.rotation = 0.0;
-    state_machine_data.current_action = 1;
+    state_machine_data.current_action = ACTION_INIT;
 
     state_task_data.mqtt_client = mqtt_client;
     state_task_data.state_machine_data = state_machine_data;
@@ -107,38 +107,40 @@ void app_main() {
   while (1) {
     test_wifi_connection();
 
-    float yaw = imu_data.heading;
-    float pitch = imu_data.pitch;
-    float roll = imu_data.roll;
+    if (current_action != ACTION_INIT) {
+        float yaw = imu_data.heading;
+        float pitch = imu_data.pitch;
+        float roll = imu_data.roll;
 
-    float acceleration_y = imu_data.accely ;
-    float acceleration_x = imu_data.accelx ;
+        float acceleration_y = imu_data.accely ;
+        float acceleration_x = imu_data.accelx ;
 
-    displacement_x = 0.5 * acceleration_x * pow(timeStep, 2);
-    displacement_y = 0.5 * acceleration_y * pow(timeStep, 2);
+        displacement_x = 0.5 * acceleration_x * pow(timeStep, 2);
+        displacement_y = 0.5 * acceleration_y * pow(timeStep, 2);
 
-    float new_x = get_current_x_pos() + (displacement_x * 100 * cos(yaw * (M_PI / 180.0)));
-    float new_y = get_current_y_pos() + (displacement_y * 100 * sin(yaw * (M_PI / 180.0)));
+        float new_x = get_current_x_pos() + (displacement_x * 100 * cos(yaw * (M_PI / 180.0)));
+        float new_y = get_current_y_pos() + (displacement_y * 100 * sin(yaw * (M_PI / 180.0)));
 
-    set_current_coordinates(new_x, new_y);
-    set_current_rotation(yaw);
+        set_current_coordinates(new_x, new_y);
+        set_current_rotation(yaw);
 
 
-    TickType_t current_time = xTaskGetTickCount();
-    float elapsed_time = (current_time - last_wakeup_time) * portTICK_PERIOD_MS / 1000.0;
+        TickType_t current_time = xTaskGetTickCount();
+        float elapsed_time = (current_time - last_wakeup_time) * portTICK_PERIOD_MS / 1000.0;
 
-    if (elapsed_time >= 1.0) {
-        printf("Yaw: ");
-        printf("%f\n", imu_data.heading);
-        printf("Displacement X: ");
-        printf("%f\n", displacement_x);
-        printf("   Displacement Y: ");
-        printf("%f\n", displacement_y);
-        printf("   Pos X: ");
-        printf("%f\n", get_current_x_pos());
-        printf("   Pos Y: ");
-        printf("%f\n", get_current_y_pos());
-        last_wakeup_time = current_time; 
+        if (elapsed_time >= 1.0) {
+            printf("Yaw: ");
+            printf("%f\n", imu_data.heading);
+            printf("Displacement X: ");
+            printf("%f\n", displacement_x);
+            printf("   Displacement Y: ");
+            printf("%f\n", displacement_y);
+            printf("   Pos X: ");
+            printf("%f\n", get_current_x_pos());
+            printf("   Pos Y: ");
+            printf("%f\n", get_current_y_pos());
+            last_wakeup_time = current_time; 
+        }
     }
 
     vTaskDelay(50 / portTICK_PERIOD_MS);

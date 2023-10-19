@@ -5,9 +5,11 @@
 #include <esp_log.h>
 #include <time.h>
 
-const char *MQTT_TAG = "test";
+const char *MQTT_TAG = "MQTT";
+
 char BALL_NAME[12];
 char ACTION_TOPIC[30];
+
 static bool mqtt_client_connected = false;
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {

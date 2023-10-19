@@ -19,16 +19,23 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
 
         //TODO: Stop ANY action when we lose connection 
 
-        while (retry_num < 5) { // Stop after some retries because this drains the battery!
-            vTaskDelay(5000 / portTICK_PERIOD_MS);
-            esp_wifi_connect();\
-            retry_num++;
-            printf("Retrying to establish outgoing connection...\n");
-        }
+        wifi_connect(); // Attempt to reconnect
     }
     else if (event_id == IP_EVENT_STA_GOT_IP) {
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
         printf("Got IP from router.\n\n");
+    }
+}
+
+void wifi_connect() {
+    while (retry_num < 10) { // Stop after some retries because this drains the battery!
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        printf("Trying to establish outgoing connection...\n");
+
+        if (esp_wifi_connect() == ESP_OK) {
+            break;
+        }
+        retry_num++;
     }
 }
 
@@ -61,5 +68,5 @@ void init_wifi(EventGroupHandle_t *wifi_event_group, const char* ssid , const ch
     esp_wifi_start();
     esp_wifi_set_mode(WIFI_MODE_STA);
 
-    esp_wifi_connect();
+    wifi_connect();
 }

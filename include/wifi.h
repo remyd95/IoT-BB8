@@ -12,3 +12,4 @@
 extern const int CONNECTED_BIT, NUM_RETRIES;
 
 void init_wifi(EventGroupHandle_t *wifi_event_group, const char* ssid , const char* password);
+void wifi_connect();
