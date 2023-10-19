@@ -2,7 +2,24 @@
 
 const int WIFI_CONNECTED_BIT = BIT0;
 const int MAX_RETRIES = 10;
-const int MAX_RETRY_INTERVAL = 3600000;
+const int MAX_RETRY_INTERVAL = 600000; // 10 min
+
+int retry_interval = 2000;
+int retry_num = 0;
+int retry_exp_step = 1;
+
+
+static void reconnect_delay(void) {
+    vTaskDelay(retry_interval / portTICK_PERIOD_MS);
+
+    if (retry_num < MAX_RETRIES) { // Initial phase
+        retry_num++;
+    } else if (retry_num >= MAX_RETRIES && retry_interval <= MAX_RETRY_INTERVAL) { // Exponential phase
+        retry_interval = pow(2, retry_exp_step) * 1000;
+        retry_num++;
+        retry_exp_step++;
+    }
+}
 
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     EventGroupHandle_t connection_event_group = (EventGroupHandle_t)event_handler_arg;
@@ -11,39 +28,23 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
         printf("Connecting...\n");
     }
     else if (event_id == WIFI_EVENT_STA_CONNECTED) {
-        printf("Connection over WIFI established.\n");
+        printf("Connection over WiFi established.\n");
     }
     else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
         xEventGroupClearBits(connection_event_group, WIFI_CONNECTED_BIT);
         printf("Connection has been lost.\n");
+        reconnect_delay();
 
-        wifi_connect(); // Attempt to reconnect
+        printf("Trying to establish outgoing connection... (Attempt #%d)\n", retry_num);
+        esp_wifi_connect();
     }
+
     else if (event_id == IP_EVENT_STA_GOT_IP) {
         xEventGroupSetBits(connection_event_group, WIFI_CONNECTED_BIT);
+        retry_interval = 2000;
+        retry_num = 0;
+        retry_exp_step = 1;
         printf("Got IP from router.\n\n");
-    }
-}
-
-void wifi_connect() {
-    int retry_interval = 2000;
-
-    int retry_num = 1;
-    int retry_exp_step = 1;
-
-    while (1) {
-        vTaskDelay(retry_interval / portTICK_PERIOD_MS);
-        printf("Trying to establish outgoing connection... (Attempt #%d)\n", retry_num);
-
-        if (esp_wifi_connect() == ESP_OK) {
-            break;
-        }
-
-        if (retry_num <= MAX_RETRIES) { // Initial phase
-            retry_num++;
-        } else if (retry_num > MAX_RETRIES && retry_interval <= MAX_RETRY_INTERVAL) { // Exponential phase
-            retry_interval = pow(2, retry_exp_step) * 1000;
-        }
     }
 }
 
@@ -74,5 +75,5 @@ void init_wifi(EventGroupHandle_t *connection_event_group, const char* ssid , co
     esp_wifi_start();
     esp_wifi_set_mode(WIFI_MODE_STA);
 
-    wifi_connect();
+    esp_wifi_connect();
 }

@@ -44,7 +44,7 @@ float get_current_speed() {
 }
 
 void report_state_task(void *args) {
-    esp_mqtt_client_handle_t mqtt_client = (esp_mqtt_client_handle_t*)args;
+    esp_mqtt_client_handle_t* mqtt_client = (esp_mqtt_client_handle_t*)args;
 
     while (1) {
         if (current_action != ACTION_INIT) {
@@ -55,9 +55,10 @@ void report_state_task(void *args) {
             char message[max_length + 1]; 
             snprintf(message, max_length + 1, "%f %f %f %d", current_x, current_y, current_rotation, current_action);
 
-            mqtt_publish_message(mqtt_client, message);
+            mqtt_publish_message(*mqtt_client, message);
 
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+
 }

@@ -30,8 +30,8 @@
 #include "lwip/sys.h"
 #include "lwip/err.h"
 
-#define LED_PIN GPIO_NUM_21 // ONBOARD LED PIN FOR ESP32-S3
-//#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32-S3
+//#define LED_PIN GPIO_NUM_21 // ONBOARD LED PIN FOR ESP32-S3
+#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32-S3
 
 // WiFi
 const char* ssid = "Phone";
@@ -62,11 +62,10 @@ static void configure_led(void) {
 }
 
 void test_connection_task(void *args) {
-    EventGroupHandle_t connection_event = (EventGroupHandle_t*)args;   
 
-    while(1) {
+    while (1) {
         // WiFi connected, turn on the LED
-        if (xEventGroupGetBits(connection_event) & WIFI_CONNECTED_BIT) {
+        if (xEventGroupGetBits(connection_event_group) & WIFI_CONNECTED_BIT) {
             if (!gpio_get_level(LED_PIN)) {
                 gpio_set_level(LED_PIN, 1);
             }
@@ -83,26 +82,24 @@ void app_main() {
   nvs_flash_init();
 
   configure_led();
-  pwm_configure_motors();
-
-  connection_event_group = xEventGroupCreate();
-
-  init_wifi(&connection_event_group, ssid, password);
-
+  //pwm_configure_motors();
   set_forward_action_callback(pwm_forward_action);
   set_backward_action_callback(pwm_backward_action);
   set_stop_action_callback(pwm_stop_action);
 
+  connection_event_group = xEventGroupCreate();
+
+  init_wifi(&connection_event_group, ssid, password);
   init_mqtt(&connection_event_group, &mqtt_client, broker_uri);
 
-  xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
+  //xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
   xTaskCreate(report_state_task, "state_task", 4096, &mqtt_client, 10, NULL);
-  xTaskCreate(test_connection_task, "imu_task", 4096, &connection_event_group, 10, NULL);
+  xTaskCreate(test_connection_task, "test_connection_task", 4096, NULL, 10, NULL);
 
   TickType_t last_wakeup_time = xTaskGetTickCount(); 
 
   while (1) {
-
+    
     if (current_action != ACTION_INIT) {
         float yaw = imu_data.heading;
         float pitch = imu_data.pitch;
