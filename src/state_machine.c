@@ -3,6 +3,7 @@
 volatile float current_x = 0.0;
 volatile float current_y = 0.0;
 volatile float current_rotation = 0.0;
+volatile float current_speed = 0.0;
 volatile int current_action = ACTION_IDLE;
 
 void set_current_coordinates(float x, float y) {
@@ -12,6 +13,10 @@ void set_current_coordinates(float x, float y) {
 
 void set_current_rotation(float rotation) {
     current_rotation = rotation;
+}
+
+void set_current_speed(float speed) {
+    current_speed = speed;
 }
 
 void set_current_action(int action) {
@@ -32,6 +37,10 @@ float get_current_rotation() {
 
 int get_current_action() {
     return current_action;
+}
+
+float get_current_speed() {
+    return current_speed;
 }
 
 void report_state_task(void *args) {

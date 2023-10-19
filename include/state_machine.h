@@ -16,7 +16,8 @@
 
 extern volatile float current_x;
 extern volatile float current_y;
-extern volatile float rotation;
+extern volatile float current_rotation;
+extern volatile float current_speed;
 extern volatile int current_action;
 
 typedef struct {
@@ -34,8 +35,10 @@ typedef struct {
 void set_current_coordinates(float x, float y);
 void set_current_action(int action);
 void set_current_rotation(float rotation);
+void set_current_speed(float speed);
 float get_current_x_pos();
 float get_current_y_pos();
 float get_current_rotation();
+float get_current_speed();
 int get_current_action();
 void report_state_task(void *args);

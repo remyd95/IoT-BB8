@@ -11,6 +11,10 @@
 #define MOTORB_PINA GPIO_NUM_3
 #define MOTORB_PINB GPIO_NUM_2
 
+#define MOTOR_LEFT 1
+#define MOTOR_RIGHT 2
+#define MOTOR_ALL -1
+
 void pwm_motor_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle);
 void pwm_motor_backward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle);
 void pwm_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num);

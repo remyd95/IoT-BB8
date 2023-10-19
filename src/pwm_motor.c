@@ -18,22 +18,43 @@ void pwm_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num) {
 }
 
 void pwm_forward_action(motor_action_data_t motor_action_data) {
-    pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.max_speed);
+    if (motor_action_data.motor_id == MOTOR_LEFT) {
+        pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed);
+    } else if (motor_action_data.motor_id == MOTOR_RIGHT) {
+        pwm_motor_forward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed);
+    } else if (motor_action_data.motor_id == MOTOR_ALL) {
+        pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed);
+        pwm_motor_forward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed);
+    }
 }
 
 void pwm_backward_action(motor_action_data_t motor_action_data) {
-    pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.max_speed);
+    if (motor_action_data.motor_id == MOTOR_LEFT) {
+        pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed);
+    } else if (motor_action_data.motor_id == MOTOR_RIGHT) {
+        pwm_motor_backward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed);
+    } else if (motor_action_data.motor_id == MOTOR_ALL) {
+        pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed);
+        pwm_motor_backward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed);
+    }
 }
 
 void pwm_stop_action(motor_action_data_t motor_action_data) {
-    pwm_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+    if (motor_action_data.motor_id == MOTOR_LEFT) {
+        pwm_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+    } else if (motor_action_data.motor_id == MOTOR_RIGHT) {
+        pwm_motor_stop(MCPWM_UNIT_1, MCPWM_TIMER_0);
+    } else if (motor_action_data.motor_id == MOTOR_ALL) {
+        pwm_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+        pwm_motor_stop(MCPWM_UNIT_1, MCPWM_TIMER_0);
+    }
 }
 
 void pwm_configure_motors(void) {
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, MOTORA_PINA);
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, MOTORA_PINB);
-    mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM1A, MOTORB_PINA);
-    mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM1B, MOTORB_PINB);
+    mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM0A, MOTORB_PINA);
+    mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM0B, MOTORB_PINB);
     
     mcpwm_config_t pwm_config;
 
@@ -44,5 +65,5 @@ void pwm_configure_motors(void) {
     pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
 
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config); 
-    mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_1, &pwm_config); 
+    mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_0, &pwm_config); 
 }
