@@ -1,8 +1,7 @@
 #include "wifi.h"
 
 const int CONNECTED_BIT = BIT0;
-const int NUM_RETRIES = 0;
-int retry_num = 0;
+const int MAX_RETRIES = 10;
 
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     EventGroupHandle_t wifi_event_group = (EventGroupHandle_t)event_handler_arg;
@@ -28,13 +27,16 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
 }
 
 void wifi_connect() {
-    while (retry_num < 10) { // Stop after some retries because this drains the battery!
+    int retry_num = 1;
+    
+    while (retry_num <= MAX_RETRIES) { // Stop after some retries because this drains the battery!
         vTaskDelay(2000 / portTICK_PERIOD_MS);
-        printf("Trying to establish outgoing connection...\n");
+        printf("Trying to establish outgoing connection... (Attempt #%d/%d)\n", retry_num, MAX_RETRIES);
 
         if (esp_wifi_connect() == ESP_OK) {
             break;
         }
+
         retry_num++;
     }
 }
