@@ -30,8 +30,8 @@
 #include "lwip/sys.h"
 #include "lwip/err.h"
 
-//#define LED_PIN GPIO_NUM_21 // ONBOARD LED PIN FOR ESP32-S3
-#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32-S3
+#define LED_PIN GPIO_NUM_21 // ONBOARD LED PIN FOR ESP32-S3
+//#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32
 
 // WiFi
 const char* ssid = "Phone";
@@ -82,7 +82,7 @@ void app_main() {
   nvs_flash_init();
 
   configure_led();
-  //pwm_configure_motors();
+  pwm_configure_motors();
   set_forward_action_callback(pwm_forward_action);
   set_backward_action_callback(pwm_backward_action);
   set_stop_action_callback(pwm_stop_action);

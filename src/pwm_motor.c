@@ -19,23 +19,23 @@ void pwm_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num) {
 
 void pwm_forward_action(motor_action_data_t motor_action_data) {
     if (motor_action_data.motor_id == MOTOR_LEFT) {
-        pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed);
+        pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed_left);
     } else if (motor_action_data.motor_id == MOTOR_RIGHT) {
-        pwm_motor_forward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed);
+        pwm_motor_forward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed_right);
     } else if (motor_action_data.motor_id == MOTOR_ALL) {
-        pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed);
-        pwm_motor_forward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed);
+        pwm_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed_left);
+        pwm_motor_forward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed_right);
     }
 }
 
 void pwm_backward_action(motor_action_data_t motor_action_data) {
     if (motor_action_data.motor_id == MOTOR_LEFT) {
-        pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed);
+        pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed_left);
     } else if (motor_action_data.motor_id == MOTOR_RIGHT) {
-        pwm_motor_backward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed);
+        pwm_motor_backward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed_right);
     } else if (motor_action_data.motor_id == MOTOR_ALL) {
-        pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed);
-        pwm_motor_backward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed);
+        pwm_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, motor_action_data.speed_left);
+        pwm_motor_backward(MCPWM_UNIT_1, MCPWM_TIMER_0, motor_action_data.speed_right);
     }
 }
 

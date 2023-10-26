@@ -29,8 +29,10 @@ class ControlPanel:
         self.canvas = None
 
         # Tkinter menu variables
-        self.max_speed_value = None
-        self.max_speed_slider = None
+        self.max_speed_left_value = None
+        self.max_speed_left_slider = None
+        self.max_speed_right_value = None
+        self.max_speed_right_slider = None
         self.ball_selector = None
         self.grid_position = None
         self.ball_selector_value = None
@@ -117,14 +119,23 @@ class ControlPanel:
         find_available_button = tk.Button(self.root, text="Find Available", command=self.find_available)
         find_available_button.grid(row=5, column=0, padx=(0, 100))
 
-        max_speed_label = tk.Label(self.root, text="Max Speed:")
-        max_speed_label.grid(row=8, column=0, padx=(0, 200))
+        max_speed_left_label = tk.Label(self.root, text="Max Speed Left:")
+        max_speed_left_label.grid(row=8, column=0, padx=(0, 400))
 
-        self.max_speed_value = tk.IntVar()
-        self.max_speed_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_value,
-                                         command=self.on_max_speed_update)
-        self.max_speed_slider.grid(row=8, column=0, pady=(0, 20))
-        self.max_speed_slider.set(100)
+        max_speed_right_label = tk.Label(self.root, text="Max Speed Right:")
+        max_speed_right_label.grid(row=8, column=0, padx=(180, 0))
+
+        self.max_speed_left_value = tk.IntVar()
+        self.max_speed_left_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_left_value,
+                                         command=self.on_max_speed_left_update)
+        self.max_speed_left_slider.grid(row=8, column=0, padx=(0, 180), pady=(0, 20))
+        self.max_speed_left_slider.set(100)
+
+        self.max_speed_right_value = tk.IntVar()
+        self.max_speed_right_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_right_value,
+                                         command=self.on_max_speed_right_update)
+        self.max_speed_right_slider.grid(row=8, column=0, padx=(400, 0), pady=(0, 20))
+        self.max_speed_right_slider.set(100)
 
     def canvas_to_grid_coords(self, x, y):
         x_grid = x - self.canvas_size // 2
@@ -233,7 +244,8 @@ class ControlPanel:
         for ball in self.balls:
             if ball.name == selected_ball:
                 self.selected_ball = ball
-                self.max_speed_slider.set(self.selected_ball.max_speed)
+                self.max_speed_left_slider.set(self.selected_ball.max_speed_left)
+                self.max_speed_right_slider.set(self.selected_ball.max_speed_right)
                 if ball.gui_obj is None:
                     # If ball not placed show a warning
                     self.initial_ball_warning = tk.Label(self.root,
@@ -243,10 +255,15 @@ class ControlPanel:
                     self.initial_ball_warning.grid(row=1, column=0)
                 return
 
-    def on_max_speed_update(self, event):
+    def on_max_speed_left_update(self, event):
         if self.selected_ball and self.selected_ball.gui_obj:
-            new_max_speed = self.max_speed_value.get()
-            self.selected_ball.max_speed = new_max_speed
+            new_max_speed_left = self.max_speed_left_value.get()
+            self.selected_ball.max_speed_left = new_max_speed_left
+
+    def on_max_speed_right_update(self, event):
+        if self.selected_ball and self.selected_ball.gui_obj:
+            new_max_speed_right = self.max_speed_right_value.get()
+            self.selected_ball.max_speed_right = new_max_speed_right
 
     def update_state(self, ball_name, state_update, create_ball=False):
         for ball in self.balls:
@@ -377,7 +394,8 @@ class ControlPanel:
             if self.initial_ball_warning:
                 self.initial_ball_warning.destroy()
             self.ball_selector.set('Select a ball')
-            self.max_speed_slider.set(100)
+            self.max_speed_left_slider.set(100)
+            self.max_speed_right_slider.set(100)
             self.selected_ball = None
 
         print(f"[GUI] Disconnected ball: {ball.name}")
@@ -387,8 +405,9 @@ class ControlPanel:
             if self.selected_ball.has_target_location:
                 print(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
                 return
-            speed = self.max_speed_value.get()
-            data = {'speed': speed}
+            speed_left = self.max_speed_left_value.get()
+            speed_right = self.max_speed_right_value.get()
+            data = {'speed_left': speed_left, 'speed_right': speed_right}
             self.selected_ball.action(ActionType.FORWARD, self.mqtt_connector, data)
 
     def move_backward(self):
@@ -396,13 +415,15 @@ class ControlPanel:
             if self.selected_ball.has_target_location:
                 print(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
                 return
-            speed = self.max_speed_value.get()
-            data = {'speed': speed}
+            speed_left = self.max_speed_left_value.get()
+            speed_right = self.max_speed_right_value.get()
+            data = {'speed_left': speed_left, 'speed_right': speed_right}
             self.selected_ball.action(ActionType.BACKWARD, self.mqtt_connector, data)
 
     def move_to(self, data):
         if self.selected_ball:
-            data['speed'] = self.max_speed_value.get()
+            data['speed_left'] = self.max_speed_left_value.get()
+            data['speed_right'] = self.max_speed_right_value.get()
             self.selected_ball.action(ActionType.MOVETO, self.mqtt_connector, data)
 
     def init_position(self, data):

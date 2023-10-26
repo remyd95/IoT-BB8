@@ -26,7 +26,7 @@ void set_stop_action_callback(MotorActionCallback callback) {
     //TODO add action to priority task queue (HIGH PRIO)
 }
 
-void move_to(float x, float y, float max_speed) {
+void move_to(float x, float y, float speed_left, float speed_right) {
     //TODO add action to priority task queue
 }
 
@@ -36,25 +36,77 @@ void process_action(char* event_data){
     motor_action_data.motor_id = MOTOR_ALL;
 
     if (strncmp(event_data, "FW", 2) == 0) {
-        float max_speed;
+        float speed_left;
+        float speed_right;
 
-        if (sscanf(event_data, "FW %f", &max_speed) == 1) {
-            float bounded_max_speed = bound_max_speed(max_speed);
+        if (sscanf(event_data, "FW %f %f", &speed_left, &speed_right) == 2) {
+            float bounded_speed_left = bound_max_speed(speed_left);
+            float bounded_speed_right = bound_max_speed(speed_right);
 
-            motor_action_data.speed = bounded_max_speed;
-            motor_action_data.max_speed = bounded_max_speed;
+            motor_action_data.speed_left = bounded_speed_left;
+            motor_action_data.speed_right = bounded_speed_right;
+
+            motor_action_data.speed_left_max = bounded_speed_left;
+            motor_action_data.speed_right_max = bounded_speed_right;
 
             set_current_action(ACTION_FORWARD);
             forward_callback(motor_action_data);
         }
     } else if (strncmp(event_data, "BW", 2) == 0) {
-        float max_speed;
+        float speed_left;
+        float speed_right;
 
-        if (sscanf(event_data, "BW %f", &max_speed) == 1) {
-            float bounded_max_speed = bound_max_speed(max_speed);
-            motor_action_data.speed = bounded_max_speed;
+        if (sscanf(event_data, "BW %f %f", &speed_left, &speed_right) == 2) {
+            float bounded_speed_left = bound_max_speed(speed_left);
+            float bounded_speed_right = bound_max_speed(speed_right);
+
+            motor_action_data.speed_left = bounded_speed_left;
+            motor_action_data.speed_right = bounded_speed_right;
+
+            motor_action_data.speed_left_max = bounded_speed_left;
+            motor_action_data.speed_right_max = bounded_speed_right;
 
             set_current_action(ACTION_BACKWARD);
+            backward_callback(motor_action_data);
+        }
+    } else if (strncmp(event_data, "TL", 2) == 0) {
+        float speed_left;
+        float speed_right;
+
+        if (sscanf(event_data, "TL %f %f", &speed_left, &speed_right) == 2) {
+            float bounded_speed_left = bound_max_speed(speed_left);
+            float bounded_speed_right = bound_max_speed(speed_right);
+
+            motor_action_data.speed_left = bounded_speed_left;
+            motor_action_data.speed_right = bounded_speed_right;
+
+            motor_action_data.speed_left_max = bounded_speed_left;
+            motor_action_data.speed_right_max = bounded_speed_right;
+
+            set_current_action(ACTION_TURN_LEFT);
+            motor_action_data.motor_id = MOTOR_LEFT;
+            backward_callback(motor_action_data);
+            motor_action_data.motor_id = MOTOR_RIGHT;
+            forward_callback(motor_action_data);
+        }
+    } else if (strncmp(event_data, "TR", 2) == 0) {
+        float speed_left;
+        float speed_right;
+
+        if (sscanf(event_data, "TR %f %f", &speed_left, &speed_right) == 2) {
+            float bounded_speed_left = bound_max_speed(speed_left);
+            float bounded_speed_right = bound_max_speed(speed_right);
+
+            motor_action_data.speed_left = bounded_speed_left;
+            motor_action_data.speed_right = bounded_speed_right;
+
+            motor_action_data.speed_left_max = bounded_speed_left;
+            motor_action_data.speed_right_max = bounded_speed_right;
+
+            set_current_action(ACTION_TURN_RIGHT);
+            motor_action_data.motor_id = MOTOR_LEFT;
+            forward_callback(motor_action_data);
+            motor_action_data.motor_id = MOTOR_RIGHT;
             backward_callback(motor_action_data);
         }
     } else if (strncmp(event_data, "ST", 2) == 0) {
@@ -64,11 +116,15 @@ void process_action(char* event_data){
 
     } else if (strncmp(event_data, "MT", 2) == 0) {
         float x, y;
-        float max_speed;
-        if (sscanf(event_data, "MT %f %f %f", &x, &y, &max_speed) == 3) {
+
+        float speed_left;
+        float speed_right;
+        if (sscanf(event_data, "MT %f %f %f %f", &x, &y, &speed_left, &speed_right) == 4) {
             // Change action data to contains these args?
+            float bounded_speed_left = bound_max_speed(speed_left);
+            float bounded_speed_right = bound_max_speed(speed_right);
             set_current_action(ACTION_MOVETO);
-            move_to(x, y, max_speed);
+            move_to(x, y, speed_left, speed_right);
         }
     } else if (strncmp(event_data, "IN", 2) == 0) {
         float x, y;
