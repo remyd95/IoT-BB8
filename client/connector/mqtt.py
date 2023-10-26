@@ -1,6 +1,11 @@
 import re
 import threading
 import time
+import logging
+logging.basicConfig(encoding='utf-8',
+                    level=logging.DEBUG,
+                    format='[%(asctime)s] [%(levelname)s] %(message)s',
+                    datefmt='%H:%M:%S')
 
 import paho.mqtt.client as mqtt
 
@@ -38,7 +43,7 @@ class MQTTClient:
         self.state_handler = handler
 
     def on_mqtt_connect(self, client, userdata, flags, rc):
-        print("[MQTT] Connected to broker with result code " + str(rc))
+        logging.info("[MQTT] Connected to broker with result code " + str(rc))
 
     def on_mqtt_message(self, client, userdata, msg):
         if msg.topic == "register":
@@ -54,7 +59,6 @@ class MQTTClient:
                         self.last_state_update[ball_name] = time.time()
                         self.register_handler(ball_id)
                     if ball_name is not None and len(payload) == 5:
-                        print("test")
                         x = float(payload[1])
                         y = float(payload[2])
                         rotation = float(payload[3])
@@ -62,7 +66,7 @@ class MQTTClient:
                         state_update = {'x': x, 'y': y, 'rotation': rotation, 'action': action}
                         self.state_handler(ball_name, state_update, create_ball=True)
                 else:
-                    print("Invalid payload format: Expected ball id of 6 digits.")
+                    logging.error("Invalid payload format: Expected ball id of 6 digits.")
         elif msg.topic.startswith("ball") and msg.topic.endswith("state"):
             ball_name = msg.topic.split('/')[0]
             payload = msg.payload.decode('utf-8').split()
@@ -79,9 +83,9 @@ class MQTTClient:
                     self.last_state_update[ball_name] = time.time()
                     self.state_handler(ball_name, state_update)
                 except ValueError:
-                    print("Invalid payload format: Unable to convert to numbers.")
+                    logging.error("Invalid payload format: Unable to convert to numbers.")
             else:
-                print("Invalid payload format: Expected 4 space-separated numbers.")
+                logging.error("Invalid payload format: Expected 4 space-separated numbers.")
 
     def remove_inactive_balls(self):
         current_time = time.time()
@@ -94,7 +98,7 @@ class MQTTClient:
         for ball_name in inactive_balls:
             del self.last_state_update[ball_name]
             if self.deregister_handler(ball_name):
-                print(f"[MQTT] Removing {ball_name} due to timeout (60s)")
+                logging.info(f"[MQTT] Removing {ball_name} due to timeout (60s)")
 
     def start_inactive_ball_checker(self):
         while True:
@@ -110,15 +114,15 @@ class MQTTClient:
         self.subscribe("register")
 
     def unsubscribe(self, mqtt_topic):
-        print(f"[MQTT] Unsubscribed from {mqtt_topic}")
+        logging.info(f"[MQTT] Unsubscribed from {mqtt_topic}")
         self.client.unsubscribe(mqtt_topic)
 
     def subscribe(self, mqtt_topic):
-        print(f"[MQTT] Subscribed to {mqtt_topic}")
+        logging.info(f"[MQTT] Subscribed to {mqtt_topic}")
         self.client.subscribe(mqtt_topic)
 
     def publish(self, mqtt_topic, message):
-        print(f"[MQTT] Sent {message} to {mqtt_topic}")
+        logging.info(f"[MQTT] Sent {message} to {mqtt_topic}")
         self.client.publish(mqtt_topic, message)
 
     def find_available_balls(self, client_id):

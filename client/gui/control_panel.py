@@ -1,6 +1,11 @@
 import math
 import tkinter as tk
 from tkinter import ttk
+import logging
+logging.basicConfig(encoding='utf-8',
+                    level=logging.DEBUG,
+                    format='[%(asctime)s] [%(levelname)s] %(message)s',
+                    datefmt='%H:%M:%S')
 
 from devices.action_type import ActionType, get_action_from_value
 from devices.ball import Ball
@@ -114,16 +119,23 @@ class ControlPanel:
         stop_button.grid(row=4, column=0, padx=(300, 0))
 
         reboot_button = tk.Button(self.root, text="Reboot", command=self.reboot)
-        reboot_button.grid(row=5, column=0, padx=(0, 350))
+        reboot_button.grid(row=5, column=0, padx=(0, 400))
 
         find_available_button = tk.Button(self.root, text="Find Available", command=self.find_available)
-        find_available_button.grid(row=5, column=0, padx=(0, 100))
+        find_available_button.grid(row=5, column=0, padx=(0, 150))
+
+        turn_left_button = tk.Button(self.root, text="Turn Left", command=self.turn_left)
+        turn_left_button.grid(row=5, column=0, padx=(100, 0))
+
+        turn_right_button = tk.Button(self.root, text="Turn Right", command=self.turn_right)
+        turn_right_button.grid(row=5, column=0, padx=(300, 0))
+
 
         max_speed_left_label = tk.Label(self.root, text="Max Speed Left:")
         max_speed_left_label.grid(row=8, column=0, padx=(0, 400))
 
         max_speed_right_label = tk.Label(self.root, text="Max Speed Right:")
-        max_speed_right_label.grid(row=8, column=0, padx=(180, 0))
+        max_speed_right_label.grid(row=8, column=0, padx=(100, 0))
 
         self.max_speed_left_value = tk.IntVar()
         self.max_speed_left_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_left_value,
@@ -134,7 +146,7 @@ class ControlPanel:
         self.max_speed_right_value = tk.IntVar()
         self.max_speed_right_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_right_value,
                                          command=self.on_max_speed_right_update)
-        self.max_speed_right_slider.grid(row=8, column=0, padx=(400, 0), pady=(0, 20))
+        self.max_speed_right_slider.grid(row=8, column=0, padx=(330, 0), pady=(0, 20))
         self.max_speed_right_slider.set(100)
 
     def canvas_to_grid_coords(self, x, y):
@@ -215,10 +227,10 @@ class ControlPanel:
                     # Remove first placement warning after
                     if self.initial_ball_warning:
                         self.initial_ball_warning.destroy()
-                    print(f"[GUI] Set initial ball location to: ({grid_x:.2f}, {grid_y:.2f})")
+                    logging.info(f"[GUI] Set initial ball location to: ({grid_x:.2f}, {grid_y:.2f})")
                 else:
                     if self.selected_ball.has_target_location:
-                        print(f"[GUI] Cannot override existing target location for {self.selected_ball.name}")
+                        logging.error(f"[GUI] Cannot override existing target location for {self.selected_ball.name}")
                         return
                     # Create move objective
                     self.move_to(data)
@@ -229,9 +241,9 @@ class ControlPanel:
                         self.canvas.create_line(event.x - 10, event.y, event.x + 10, event.y, fill="red"),
                         self.canvas.create_line(event.x, event.y - 10, event.x, event.y + 10, fill="red")))
 
-                    print(f"[GUI] Set ball target location to: ({grid_x:.2f}, {grid_y:.2f})")
+                    logging.info(f"[GUI] Set ball target location to: ({grid_x:.2f}, {grid_y:.2f})")
         else:
-            print("[GUI] Selection not in grid")
+            logging.debug("[GUI] Selection not in grid")
 
     def on_ball_select(self, event):
         # Remove the first placement warning when selecting other ball
@@ -239,7 +251,7 @@ class ControlPanel:
             self.initial_ball_warning.destroy()
 
         selected_ball = self.ball_selector_value.get()
-        print("[GUI] Selected ball:", selected_ball)
+        logging.info("[GUI] Selected ball:", selected_ball)
 
         for ball in self.balls:
             if ball.name == selected_ball:
@@ -313,7 +325,7 @@ class ControlPanel:
                                                               fill="green", arrow=tk.LAST, width=arrow_width)
                     ball.set_direction_object(direction_arrow)
 
-                    print(f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, rotation={ball.rotation}. {ball.cur_action}")
+                    logging.info(f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, rotation={ball.rotation}. {ball.cur_action}")
                 elif create_ball and get_action_from_value(state_update['action']) != ActionType.INIT:
                     canvas_x, canvas_y = self.grid_to_canvas_coords(state_update['x'], state_update['y'])
                     data = {'x': state_update['x'], 'y': state_update['y']}
@@ -352,7 +364,7 @@ class ControlPanel:
 
             self.mqtt_connector.subscribe(registered_ball.name + "/state")
         else:
-            print("[GUI] Duplicate ball registration: " + str(ball_id))
+            logging.warning("[GUI] Duplicate ball registration: " + str(ball_id))
 
     def delete_selected_ball(self):
         if self.selected_ball:
@@ -398,12 +410,32 @@ class ControlPanel:
             self.max_speed_right_slider.set(100)
             self.selected_ball = None
 
-        print(f"[GUI] Disconnected ball: {ball.name}")
+        logging.info(f"[GUI] Disconnected ball: {ball.name}")
+
+    def turn_left(self):
+        if self.selected_ball:
+            if self.selected_ball.has_target_location:
+                logging.warning(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
+                return
+            speed_left = self.max_speed_left_value.get()
+            speed_right = self.max_speed_right_value.get()
+            data = {'speed_left': speed_left, 'speed_right': speed_right}
+            self.selected_ball.action(ActionType.TURN_LEFT, self.mqtt_connector, data)
+
+    def turn_right(self):
+        if self.selected_ball:
+            if self.selected_ball.has_target_location:
+                logging.warning(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
+                return
+            speed_left = self.max_speed_left_value.get()
+            speed_right = self.max_speed_right_value.get()
+            data = {'speed_left': speed_left, 'speed_right': speed_right}
+            self.selected_ball.action(ActionType.TURN_RIGHT, self.mqtt_connector, data)
 
     def move_forward(self):
         if self.selected_ball:
             if self.selected_ball.has_target_location:
-                print(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
+                logging.warning(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
                 return
             speed_left = self.max_speed_left_value.get()
             speed_right = self.max_speed_right_value.get()
@@ -413,7 +445,7 @@ class ControlPanel:
     def move_backward(self):
         if self.selected_ball:
             if self.selected_ball.has_target_location:
-                print(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
+                logging.warning(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
                 return
             speed_left = self.max_speed_left_value.get()
             speed_right = self.max_speed_right_value.get()

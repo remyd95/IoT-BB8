@@ -34,8 +34,8 @@
 //#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32
 
 // WiFi
-const char* ssid = "Phone";
-const char* password =  "wifi1234";
+const char* ssid = "Oneplus_Nord";
+const char* password =  "perenpatser";
 
 // MQTT
 const char* broker_uri = "mqtt://duijsens.dev";

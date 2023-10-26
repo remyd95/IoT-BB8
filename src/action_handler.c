@@ -77,17 +77,24 @@ void process_action(char* event_data){
             float bounded_speed_left = bound_max_speed(speed_left);
             float bounded_speed_right = bound_max_speed(speed_right);
 
-            motor_action_data.speed_left = bounded_speed_left;
-            motor_action_data.speed_right = bounded_speed_right;
+            motor_action_data_t motor_action_data1;
+            motor_action_data_t motor_action_data2;
+            
+            motor_action_data1.speed_left = bounded_speed_left;
+            motor_action_data2.speed_left = bounded_speed_left;
+            motor_action_data1.speed_right = bounded_speed_right;
+            motor_action_data2.speed_right = bounded_speed_right;
 
-            motor_action_data.speed_left_max = bounded_speed_left;
-            motor_action_data.speed_right_max = bounded_speed_right;
+            motor_action_data1.speed_left_max = bounded_speed_left;
+            motor_action_data2.speed_left_max = bounded_speed_left;
+            motor_action_data1.speed_right_max = bounded_speed_right;
+            motor_action_data2.speed_right_max = bounded_speed_right;
 
             set_current_action(ACTION_TURN_LEFT);
-            motor_action_data.motor_id = MOTOR_LEFT;
-            backward_callback(motor_action_data);
-            motor_action_data.motor_id = MOTOR_RIGHT;
-            forward_callback(motor_action_data);
+            motor_action_data1.motor_id = MOTOR_LEFT;
+            backward_callback(motor_action_data1);
+            motor_action_data2.motor_id = MOTOR_RIGHT;
+            forward_callback(motor_action_data2);
         }
     } else if (strncmp(event_data, "TR", 2) == 0) {
         float speed_left;
@@ -97,17 +104,24 @@ void process_action(char* event_data){
             float bounded_speed_left = bound_max_speed(speed_left);
             float bounded_speed_right = bound_max_speed(speed_right);
 
-            motor_action_data.speed_left = bounded_speed_left;
-            motor_action_data.speed_right = bounded_speed_right;
+            motor_action_data_t motor_action_data1;
+            motor_action_data_t motor_action_data2;
+            
+            motor_action_data1.speed_left = bounded_speed_left;
+            motor_action_data2.speed_left = bounded_speed_left;
+            motor_action_data1.speed_right = bounded_speed_right;
+            motor_action_data2.speed_right = bounded_speed_right;
 
-            motor_action_data.speed_left_max = bounded_speed_left;
-            motor_action_data.speed_right_max = bounded_speed_right;
-
+            motor_action_data1.speed_left_max = bounded_speed_left;
+            motor_action_data2.speed_left_max = bounded_speed_left;
+            motor_action_data1.speed_right_max = bounded_speed_right;
+            motor_action_data2.speed_right_max = bounded_speed_right;
+            
             set_current_action(ACTION_TURN_RIGHT);
-            motor_action_data.motor_id = MOTOR_LEFT;
-            forward_callback(motor_action_data);
-            motor_action_data.motor_id = MOTOR_RIGHT;
-            backward_callback(motor_action_data);
+            motor_action_data1.motor_id = MOTOR_LEFT;
+            forward_callback(motor_action_data1);
+            motor_action_data2.motor_id = MOTOR_RIGHT;
+            backward_callback(motor_action_data2);
         }
     } else if (strncmp(event_data, "ST", 2) == 0) {
         set_current_action(ACTION_STOP);

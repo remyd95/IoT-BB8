@@ -43,6 +43,10 @@ class Ball:
             mqtt_connector.publish(self.topic, f"FW {float(data['speed_left'])} {float(data['speed_right'])}")
         elif action_type == ActionType.BACKWARD:
             mqtt_connector.publish(self.topic, f"BW {float(data['speed_left'])} {float(data['speed_right'])}")
+        elif action_type == ActionType.TURN_LEFT:
+            mqtt_connector.publish(self.topic, f"TL {float(data['speed_left'])} {float(data['speed_right'])}")
+        elif action_type == ActionType.TURN_RIGHT:
+            mqtt_connector.publish(self.topic, f"TR {float(data['speed_left'])} {float(data['speed_right'])}")
         elif action_type == ActionType.STOP:
             mqtt_connector.publish(self.topic, "ST")
         elif action_type == ActionType.REBOOT:
