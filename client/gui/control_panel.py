@@ -252,8 +252,12 @@ class ControlPanel:
                     logging.info(f"[GUI] Set initial ball location to: ({grid_x:.2f}, {grid_y:.2f})")
                 else:
                     if self.selected_ball.has_target_location:
-                        logging.error(f"[GUI] Cannot override existing target location for {self.selected_ball.name}")
+                        logging.warning(f"[GUI] Cannot override existing target location for {self.selected_ball.name}")
                         return
+                    if self.keyboard_mode:
+                        logging.warning(f"[GUI] Cannot set target location whehn keyboard mode is enabled.")
+                        return
+                    
                     # Create move objective
                     self.move_to(data)
                     self.selected_ball.has_target_location = True
