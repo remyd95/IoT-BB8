@@ -1,7 +1,10 @@
+import atexit
 import math
+import os
 import tkinter as tk
 from tkinter import ttk
 import logging
+
 logging.basicConfig(encoding='utf-8',
                     level=logging.DEBUG,
                     format='[%(asctime)s] [%(levelname)s] %(message)s',
@@ -10,8 +13,14 @@ logging.basicConfig(encoding='utf-8',
 from devices.action_type import ActionType, get_action_from_value
 from devices.ball import Ball
 
+os.system('xset r off')  # Important fix for key release behaviour
+
 BALL_COLOR = "yellow"
 BASE_COLOR = "white"
+
+
+def clean_up():
+    os.system('xset r on')
 
 
 class ControlPanel:
@@ -43,6 +52,7 @@ class ControlPanel:
         self.ball_selector_value = None
         self.base_label = None
         self.initial_ball_warning = None
+        self.keyboard_button = None
 
         # Setup the GUI
         self.setup_canvas()
@@ -50,6 +60,14 @@ class ControlPanel:
         self.create_buttons()
         self.set_basestation_icon()
         self.setup_touchscreen()
+
+        # Keyboard bindings
+        self.keyboard_mode = False
+        self.root.bind("<KeyPress>", self.on_key_press)
+        self.root.bind("<KeyRelease>", self.on_key_release)
+
+        # Cleanup after exiting control panel
+        atexit.register(clean_up)
 
     def setup_canvas(self):
         self.canvas = tk.Canvas(self.root, width=self.canvas_size, height=self.canvas_size)
@@ -106,6 +124,9 @@ class ControlPanel:
         self.ball_selector.grid(row=3, column=0, pady=(10, 20))
         self.ball_selector.set('Select a ball')
 
+        self.keyboard_button = tk.Button(self.root, text="Enable Keyboard Mode", command=self.toggle_keyboard)
+        self.keyboard_button.grid(row=6, column=0, padx=(0, 250))
+
         delete_button = tk.Button(self.root, text="Disconnect Ball", command=self.delete_selected_ball)
         delete_button.grid(row=4, column=0, padx=(0, 350))
 
@@ -130,7 +151,6 @@ class ControlPanel:
         turn_right_button = tk.Button(self.root, text="Turn Right", command=self.turn_right)
         turn_right_button.grid(row=5, column=0, padx=(300, 0))
 
-
         max_speed_left_label = tk.Label(self.root, text="Max Speed Left:")
         max_speed_left_label.grid(row=8, column=0, padx=(0, 400))
 
@@ -138,14 +158,16 @@ class ControlPanel:
         max_speed_right_label.grid(row=8, column=0, padx=(100, 0))
 
         self.max_speed_left_value = tk.IntVar()
-        self.max_speed_left_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_left_value,
-                                         command=self.on_max_speed_left_update)
+        self.max_speed_left_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal",
+                                              variable=self.max_speed_left_value,
+                                              command=self.on_max_speed_left_update)
         self.max_speed_left_slider.grid(row=8, column=0, padx=(0, 180), pady=(0, 20))
         self.max_speed_left_slider.set(100)
 
         self.max_speed_right_value = tk.IntVar()
-        self.max_speed_right_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal", variable=self.max_speed_right_value,
-                                         command=self.on_max_speed_right_update)
+        self.max_speed_right_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal",
+                                               variable=self.max_speed_right_value,
+                                               command=self.on_max_speed_right_update)
         self.max_speed_right_slider.grid(row=8, column=0, padx=(330, 0), pady=(0, 20))
         self.max_speed_right_slider.set(100)
 
@@ -245,13 +267,50 @@ class ControlPanel:
         else:
             logging.debug("[GUI] Selection not in grid")
 
+    def toggle_keyboard(self):
+        if self.keyboard_mode:
+            self.keyboard_mode = False
+            self.keyboard_button.config(text="Enable Keyboard Mode")
+            for widget in self.root.winfo_children():
+                if widget != self.keyboard_button:
+                    widget.configure(state="normal")
+        else:
+            if self.selected_ball:
+                self.keyboard_mode = True
+                self.keyboard_button.config(text="Disable Keyboard Mode")
+                for widget in self.root.winfo_children():
+                    if widget != self.keyboard_button:
+                        widget.configure(state="disabled")
+            else:
+                logging.warn("[GUI] Keyboard mode can not be enabled, ball is not selected.")
+
+    def on_key_press(self, event):
+        if self.keyboard_mode:
+            if event.keysym == 'Up':
+                print("UP")
+                self.move_forward()
+            elif event.keysym == 'Down':
+                print("DOWN")
+                self.move_backward()
+            elif event.keysym == 'Left':
+                print("LEFT")
+                self.turn_left()
+            elif event.keysym == 'Right':
+                print("RIGHT")
+                self.turn_right()
+
+    def on_key_release(self, event):
+        if self.keyboard_mode:
+            print("STOP")
+            self.stop_movement()
+
     def on_ball_select(self, event):
         # Remove the first placement warning when selecting other ball
         if self.initial_ball_warning:
             self.initial_ball_warning.destroy()
 
         selected_ball = self.ball_selector_value.get()
-        logging.info("[GUI] Selected ball:", selected_ball)
+        logging.info(f"[GUI] Selected ball: {selected_ball}")
 
         for ball in self.balls:
             if ball.name == selected_ball:
@@ -325,7 +384,8 @@ class ControlPanel:
                                                               fill="green", arrow=tk.LAST, width=arrow_width)
                     ball.set_direction_object(direction_arrow)
 
-                    logging.info(f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, rotation={ball.rotation}. {ball.cur_action}")
+                    logging.info(
+                        f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, rotation={ball.rotation}. {ball.cur_action}")
                 elif create_ball and get_action_from_value(state_update['action']) != ActionType.INIT:
                     canvas_x, canvas_y = self.grid_to_canvas_coords(state_update['x'], state_update['y'])
                     data = {'x': state_update['x'], 'y': state_update['y']}
