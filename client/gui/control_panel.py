@@ -1,3 +1,6 @@
+from devices.action_type import ActionType, get_action_from_value
+from devices.ball import Ball
+
 import atexit
 import math
 import os
@@ -9,9 +12,6 @@ logging.basicConfig(encoding='utf-8',
                     level=logging.DEBUG,
                     format='[%(asctime)s] [%(levelname)s] %(message)s',
                     datefmt='%H:%M:%S')
-
-from devices.action_type import ActionType, get_action_from_value
-from devices.ball import Ball
 
 os.system('xset r off')  # Important fix for key release behaviour
 
@@ -63,6 +63,7 @@ class ControlPanel:
 
         # Keyboard bindings
         self.keyboard_mode = False
+        self.active_key = None
         self.root.bind("<KeyPress>", self.on_key_press)
         self.root.bind("<KeyRelease>", self.on_key_release)
 
@@ -124,9 +125,6 @@ class ControlPanel:
         self.ball_selector.grid(row=3, column=0, pady=(10, 20))
         self.ball_selector.set('Select a ball')
 
-        self.keyboard_button = tk.Button(self.root, text="Enable Keyboard Mode", command=self.toggle_keyboard)
-        self.keyboard_button.grid(row=6, column=0, padx=(0, 250))
-
         delete_button = tk.Button(self.root, text="Disconnect Ball", command=self.delete_selected_ball)
         delete_button.grid(row=4, column=0, padx=(0, 350))
 
@@ -150,6 +148,12 @@ class ControlPanel:
 
         turn_right_button = tk.Button(self.root, text="Turn Right", command=self.turn_right)
         turn_right_button.grid(row=5, column=0, padx=(300, 0))
+
+        self.keyboard_button = tk.Button(self.root, text="Enable Keyboard Mode", command=self.toggle_keyboard)
+        self.keyboard_button.grid(row=6, column=0, padx=(0, 250))
+
+        remove_target_button = tk.Button(self.root, text="Remove Target", command=self.remove_target)
+        remove_target_button.grid(row=6, column=0, padx=(100, 0))
 
         max_speed_left_label = tk.Label(self.root, text="Max Speed Left:")
         max_speed_left_label.grid(row=8, column=0, padx=(0, 400))
@@ -257,7 +261,7 @@ class ControlPanel:
                     if self.keyboard_mode:
                         logging.warning(f"[GUI] Cannot set target location whehn keyboard mode is enabled.")
                         return
-                    
+
                     # Create move objective
                     self.move_to(data)
                     self.selected_ball.has_target_location = True
@@ -286,26 +290,31 @@ class ControlPanel:
                     if widget != self.keyboard_button:
                         widget.configure(state="disabled")
             else:
-                logging.warn("[GUI] Keyboard mode can not be enabled, ball is not selected.")
+                logging.warning("[GUI] Keyboard mode can not be enabled, ball is not selected.")
 
     def on_key_press(self, event):
-        if self.keyboard_mode:
+        if self.keyboard_mode and not self.active_key:
             if event.keysym == 'Up':
                 print("UP")
+                self.active_key = event.keysym
                 self.move_forward()
             elif event.keysym == 'Down':
                 print("DOWN")
+                self.active_key = event.keysym
                 self.move_backward()
             elif event.keysym == 'Left':
                 print("LEFT")
+                self.active_key = event.keysym
                 self.turn_left()
             elif event.keysym == 'Right':
                 print("RIGHT")
+                self.active_key = event.keysym
                 self.turn_right()
 
     def on_key_release(self, event):
-        if self.keyboard_mode:
+        if self.keyboard_mode and event.keysym == self.active_key:
             print("STOP")
+            self.active_key = None
             self.stop_movement()
 
     def on_ball_select(self, event):
@@ -392,7 +401,6 @@ class ControlPanel:
                         f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, rotation={ball.rotation}. {ball.cur_action}")
                 elif create_ball and get_action_from_value(state_update['action']) != ActionType.INIT:
                     canvas_x, canvas_y = self.grid_to_canvas_coords(state_update['x'], state_update['y'])
-                    data = {'x': state_update['x'], 'y': state_update['y']}
 
                     if ball.gui_obj is None:
                         # Create ball object for the first time
@@ -433,6 +441,8 @@ class ControlPanel:
     def delete_selected_ball(self):
         if self.selected_ball:
             self.delete_ball(self.selected_ball)
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
 
     def deregister_ball(self, ball_name):
         for ball in self.balls:
@@ -452,6 +462,7 @@ class ControlPanel:
             self.canvas.delete(ball.target_obj[0])
             self.canvas.delete(ball.target_obj[1])
             ball.target_obj = None
+            ball.has_target_location = False
 
         # If ball had a known direction remove the arrow GUI component
         if ball.direction_obj:
@@ -485,6 +496,8 @@ class ControlPanel:
             speed_right = self.max_speed_right_value.get()
             data = {'speed_left': speed_left, 'speed_right': speed_right}
             self.selected_ball.action(ActionType.TURN_LEFT, self.mqtt_connector, data)
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
 
     def turn_right(self):
         if self.selected_ball:
@@ -495,6 +508,8 @@ class ControlPanel:
             speed_right = self.max_speed_right_value.get()
             data = {'speed_left': speed_left, 'speed_right': speed_right}
             self.selected_ball.action(ActionType.TURN_RIGHT, self.mqtt_connector, data)
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
 
     def move_forward(self):
         if self.selected_ball:
@@ -505,6 +520,8 @@ class ControlPanel:
             speed_right = self.max_speed_right_value.get()
             data = {'speed_left': speed_left, 'speed_right': speed_right}
             self.selected_ball.action(ActionType.FORWARD, self.mqtt_connector, data)
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
 
     def move_backward(self):
         if self.selected_ball:
@@ -515,28 +532,53 @@ class ControlPanel:
             speed_right = self.max_speed_right_value.get()
             data = {'speed_left': speed_left, 'speed_right': speed_right}
             self.selected_ball.action(ActionType.BACKWARD, self.mqtt_connector, data)
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
 
     def move_to(self, data):
         if self.selected_ball:
             data['speed_left'] = self.max_speed_left_value.get()
             data['speed_right'] = self.max_speed_right_value.get()
             self.selected_ball.action(ActionType.MOVETO, self.mqtt_connector, data)
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
 
     def init_position(self, data):
         if self.selected_ball:
             self.selected_ball.action(ActionType.INIT, self.mqtt_connector, data)
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
 
     def disconnect(self):
         if self.selected_ball:
             pass
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
 
     def reboot(self):
         if self.selected_ball:
             self.selected_ball.action(ActionType.REBOOT, self.mqtt_connector)
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
 
     def find_available(self):
         self.mqtt_connector.find_available_balls(self.client_id)
 
+    def remove_target(self):
+        if self.selected_ball:
+            if self.selected_ball.has_target_location:
+                self.stop_movement()
+                self.canvas.delete(self.selected_ball.target_obj[0])
+                self.canvas.delete(self.selected_ball.target_obj[1])
+                self.selected_ball.target_obj = None
+                self.selected_ball.has_target_location = False
+            else:
+                logging.error("[GUI] Action ignored, selected ball has no target location.")
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
+
     def stop_movement(self):
         if self.selected_ball:
             self.selected_ball.action(ActionType.STOP, self.mqtt_connector)
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
