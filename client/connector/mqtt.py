@@ -30,6 +30,7 @@ class MQTTClient:
     """
     MQTT client for communication with the MQTT broker. Handles all MQTT communication.
     """
+
     def __init__(self, mqtt_broker, mqtt_port, mqtt_keepalive):
         """
         Constructor for MQTTClient. Initializes the MQTT client and sets the callbacks.
@@ -143,7 +144,7 @@ class MQTTClient:
                     self.state_handler(ball_name, state_update)
                 except ValueError:
                     logging.error("Invalid payload format: Unable to convert to numbers.")
-            elif len(payload) == 6:
+            elif len(payload) == 6:  # TODO: Also add speed and acceleration to state
                 try:
                     x = float(payload[0])
                     y = float(payload[1])
