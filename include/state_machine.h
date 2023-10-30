@@ -16,11 +16,21 @@
 #define ACTION_TURN_RIGHT 8
 #define ACTION_UNDEFINED -1
 
-extern volatile float current_x;
-extern volatile float current_y;
-extern volatile float current_rotation;
-extern volatile float current_speed;
-extern volatile int current_action;
+#define STATE_INTERVAL_TIME_MS 1000
+
+
+typedef struct {
+    float x;
+    float y;
+    float rotation;
+    float pitch;
+    float roll;
+    float speed;
+    float acceleration;
+    int action;
+} State;
+
+extern volatile State current_state;
 
 void set_current_coordinates(float x, float y);
 void set_current_action(int action);

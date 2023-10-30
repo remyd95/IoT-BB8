@@ -34,8 +34,8 @@
 //#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32
 
 // WiFi
-const char* ssid = "Oneplus_Nord";
-const char* password =  "perenpatser";
+const char* ssid = "Phone";
+const char* password =  "wifi1234";
 
 // MQTT
 const char* broker_uri = "mqtt://duijsens.dev";
@@ -79,28 +79,27 @@ void test_connection_task(void *args) {
 }
 
 void app_main() {
-  nvs_flash_init();
+    nvs_flash_init();
 
-  configure_led();
-  pwm_configure_motors();
-  set_forward_action_callback(pwm_forward_action);
-  set_backward_action_callback(pwm_backward_action);
-  set_stop_action_callback(pwm_stop_action);
+    configure_led();
+    pwm_configure_motors();
 
-  connection_event_group = xEventGroupCreate();
+    connection_event_group = xEventGroupCreate();
 
-  init_wifi(&connection_event_group, ssid, password);
-  init_mqtt(&connection_event_group, &mqtt_client, broker_uri);
+    init_wifi(&connection_event_group, ssid, password);
+    init_mqtt(&connection_event_group, &mqtt_client, broker_uri);
 
-  //xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
-  xTaskCreate(report_state_task, "state_task", 4096, &mqtt_client, 10, NULL);
-  xTaskCreate(test_connection_task, "test_connection_task", 4096, NULL, 10, NULL);
+    //xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
+    xTaskCreate(report_state_task, "state_task", 4096, &mqtt_client, 10, NULL);
+    xTaskCreate(test_connection_task, "test_connection_task", 4096, NULL, 10, NULL);
 
-  TickType_t last_wakeup_time = xTaskGetTickCount(); 
+    TickType_t last_wakeup_time = xTaskGetTickCount(); 
+
 
   while (1) {
-    
-    if (current_action != ACTION_INIT) {
+
+
+    if (get_current_action() != ACTION_INIT) {
         float yaw = imu_data.heading;
         float pitch = imu_data.pitch;
         float roll = imu_data.roll;
