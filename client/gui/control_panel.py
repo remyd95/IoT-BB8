@@ -61,10 +61,8 @@ class ControlPanel:
         self.canvas = None
 
         # Tkinter menu variables
-        self.max_speed_left_value = None
-        self.max_speed_left_slider = None
-        self.max_speed_right_value = None
-        self.max_speed_right_slider = None
+        self.max_speed_value = None
+        self.max_speed_slider = None
         self.ball_selector = None
         self.grid_position = None
         self.ball_selector_value = None
@@ -187,33 +185,23 @@ class ControlPanel:
         turn_left_button.grid(row=self.grid_row_offset + 5, column=0, padx=(100, 0))
 
         turn_right_button = tk.Button(self.root, text="Turn Right", command=self.turn_right)
-        turn_right_button.grid(row=self.grid_row_offset + 5, column=0, padx=(300, 0))
+        turn_right_button.grid(row=self.grid_row_offset + 5, column=0, padx=(325, 0))
 
         self.keyboard_button = tk.Button(self.root, text="Enable Keyboard Mode", command=self.toggle_keyboard)
         self.keyboard_button.grid(row=self.grid_row_offset + 6, column=0, padx=(0, 250))
 
         remove_target_button = tk.Button(self.root, text="Remove Target", command=self.remove_target)
-        remove_target_button.grid(row=self.grid_row_offset + 6, column=0, padx=(100, 0))
+        remove_target_button.grid(row=self.grid_row_offset + 6, column=0, padx=(200, 0))
 
-        max_speed_left_label = tk.Label(self.root, text="Max Speed Left:")
-        max_speed_left_label.grid(row=self.grid_row_offset + 8, column=0, padx=(0, 400))
+        max_speed_label = tk.Label(self.root, text="Max Speed:")
+        max_speed_label.grid(row=self.grid_row_offset + 8, column=0, padx=(0, 150))
 
-        max_speed_right_label = tk.Label(self.root, text="Max Speed Right:")
-        max_speed_right_label.grid(row=self.grid_row_offset + 8, column=0, padx=(100, 0))
-
-        self.max_speed_left_value = tk.IntVar()
-        self.max_speed_left_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal",
-                                              variable=self.max_speed_left_value,
-                                              command=self.on_max_speed_left_update)
-        self.max_speed_left_slider.grid(row=self.grid_row_offset + 8, column=0, padx=(0, 180), pady=(0, 20))
-        self.max_speed_left_slider.set(100)
-
-        self.max_speed_right_value = tk.IntVar()
-        self.max_speed_right_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal",
-                                               variable=self.max_speed_right_value,
-                                               command=self.on_max_speed_right_update)
-        self.max_speed_right_slider.grid(row=self.grid_row_offset + 8, column=0, padx=(330, 0), pady=(0, 20))
-        self.max_speed_right_slider.set(100)
+        self.max_speed_value = tk.IntVar()
+        self.max_speed_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal",
+                                              variable=self.max_speed_value,
+                                              command=self.on_max_speed_update)
+        self.max_speed_slider.grid(row=self.grid_row_offset + 8, column=0, padx=(50, 0), pady=(0, 20))
+        self.max_speed_slider.set(100)
 
         imu_header = tk.Label(self.root, text=f"\t\tIMU Data:\t\t")
         imu_header.grid(row=1, column=1)
@@ -440,8 +428,7 @@ class ControlPanel:
         for ball in self.balls:
             if ball.name == selected_ball:
                 self.selected_ball = ball
-                self.max_speed_left_slider.set(self.selected_ball.max_speed_left)
-                self.max_speed_right_slider.set(self.selected_ball.max_speed_right)
+                self.max_speed_slider.set(self.selected_ball.max_speed)
                 if ball.gui_obj is None:
                     # If ball not placed show a warning
                     self.initial_ball_warning = tk.Label(self.root,
@@ -450,26 +437,15 @@ class ControlPanel:
                                                          fg="white")
                     self.initial_ball_warning.grid(row=11, column=0)
                 return
-
-    def on_max_speed_left_update(self, event):
+    def on_max_speed_update(self, event):
         """
-        Handles the max speed left update event. If a ball is selected, the max speed left will be updated.
+        Handles the max speed update event. If a ball is selected, the max speed right will be updated.
         :param event: The max speed slider event
         :return: None
         """
         if self.selected_ball and self.selected_ball.gui_obj:
-            new_max_speed_left = self.max_speed_left_value.get()
-            self.selected_ball.max_speed_left = new_max_speed_left
-
-    def on_max_speed_right_update(self, event):
-        """
-        Handles the max speed right update event. If a ball is selected, the max speed right will be updated.
-        :param event: The max speed slider event
-        :return: None
-        """
-        if self.selected_ball and self.selected_ball.gui_obj:
-            new_max_speed_right = self.max_speed_right_value.get()
-            self.selected_ball.max_speed_right = new_max_speed_right
+            new_max_speed = self.max_speed_value.get()
+            self.selected_ball.max_speed = new_max_speed
 
     def update_state(self, ball_name, state_update, create_ball=False):
         """
@@ -666,8 +642,7 @@ class ControlPanel:
             if self.initial_ball_warning:
                 self.initial_ball_warning.destroy()
             self.ball_selector.set('Select a ball')
-            self.max_speed_left_slider.set(100)
-            self.max_speed_right_slider.set(100)
+            self.max_speed_slider.set(100)
             self.selected_ball = None
 
         logging.info(f"[GUI] Disconnected ball: {ball.name}")
@@ -714,9 +689,8 @@ class ControlPanel:
             if self.selected_ball.has_target_location:
                 logging.warning(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
                 return
-            speed_left = self.max_speed_left_value.get()
-            speed_right = self.max_speed_right_value.get()
-            data = {'speed_left': speed_left, 'speed_right': speed_right}
+            speed = self.max_speed_value.get()
+            data = {'speed': speed}
             self.selected_ball.action(action_type, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
@@ -728,8 +702,7 @@ class ControlPanel:
         :return: None
         """
         if self.selected_ball:
-            data['speed_left'] = self.max_speed_left_value.get()
-            data['speed_right'] = self.max_speed_right_value.get()
+            data['speed'] = self.max_speed_value.get()
             self.selected_ball.action(ActionType.MOVETO, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
