@@ -1,6 +1,7 @@
 #include "state_machine.h"
 
 volatile State current_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ACTION_INIT};
+volatile Target target = {0.0, 0.0, 0.0};
 
 void set_current_coordinates(float x, float y) {
     current_state.x = x;
@@ -29,6 +30,15 @@ void set_current_action(int action) {
 
 void set_current_acceleration(float acceleration) {
     current_state.acceleration = acceleration;
+}
+
+void set_target_coordinates(float x, float y) {
+    target.x = x;
+    target.y = y;
+}
+
+void set_target_speed(float speed) {
+    target.speed = speed;
 }
 
 float get_current_x_pos() {
@@ -63,6 +73,17 @@ float get_current_acceleration() {
     return current_state.acceleration;
 }
 
+float get_target_x_pos() {
+    return target.x;
+}
+
+float get_target_y_pos() {
+    return target.y;
+}
+
+float get_target_speed() {
+    return target.speed;
+}
 
 void report_state_task(void *args) {
     esp_mqtt_client_handle_t* mqtt_client = (esp_mqtt_client_handle_t*)args;
