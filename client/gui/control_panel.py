@@ -375,14 +375,14 @@ class ControlPanel:
             self.keyboard_mode = False
             self.keyboard_button.config(text="Enable Keyboard Mode")
             for widget in self.root.winfo_children():
-                if widget != self.keyboard_button:
+                if widget != self.keyboard_button and widget not in self.imu_labels.values():
                     widget.configure(state="normal")
         else:
             if self.selected_ball:
                 self.keyboard_mode = True
                 self.keyboard_button.config(text="Disable Keyboard Mode")
                 for widget in self.root.winfo_children():
-                    if widget != self.keyboard_button:
+                    if widget != self.keyboard_button and widget not in self.imu_labels.values():
                         widget.configure(state="disabled")
             else:
                 logging.warning("[GUI] Keyboard mode can not be enabled, ball is not selected.")
@@ -472,14 +472,6 @@ class ControlPanel:
                     ball.rotation = state_update['rotation']
                     ball.cur_action = get_action_from_value(state_update['action'])
 
-                    # If new state is IDLE clear all objectives
-                    if ball.cur_action == ActionType.IDLE:
-                        if ball.has_target_location:
-                            ball.has_target_location = False
-                            self.canvas.delete(ball.target_obj[0])
-                            self.canvas.delete(ball.target_obj[1])
-                            ball.target_obj = None
-
                     # Clear old GUI components
                     self.canvas.delete(ball.gui_obj)
                     self.canvas.delete(ball.position_label)
@@ -510,9 +502,6 @@ class ControlPanel:
                                                               fill="green", arrow=tk.LAST, width=arrow_width)
                     ball.set_direction_object(direction_arrow)
 
-                    logging.info(
-                        f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, yaw={ball.rotation},"
-                        f" pitch={ball.pitch}, roll={ball.roll}, {ball.cur_action}")
                 elif create_ball and get_action_from_value(state_update['action']) != ActionType.INIT:
                     canvas_x, canvas_y = self.grid_to_canvas_coords(state_update['x'], state_update['y'])
 
@@ -542,16 +531,23 @@ class ControlPanel:
                 if ball_name in self.imu_labels:
                     yaw = state_update['rotation']
                     try:
-                        pitch = state_update['pitch']
-                        roll = state_update['roll']
+                        ball.pitch = state_update['pitch']
+                        ball.roll = state_update['roll']
+                        ball.speed = state_update['speed']
+                        ball.acceleration = state_update['acceleration']
+                        ball.duty_cycle = state_update['duty_cycle']
                         imu_label = self.imu_labels[ball_name]
                         imu_label.config(
-                            text=f"{ball_name} - Yaw: {yaw}, Pitch: {pitch}, Roll: {roll}\n"
-                                 f"\tSpeed: -, Accel: -, Duty: -"
+                            text=f"{ball_name} - Yaw: {yaw}, Pitch: {ball.pitch}, Roll: {ball.roll}\n"
+                                 f"\tSpeed: {ball.speed}, Accel: {ball.acceleration}, Duty: {ball.duty_cycle}"
                         )
                     except KeyError:
-                        logging.warning("State update does not contain Pitch or Roll")
+                        logging.warning("[GUI] Legacy state update received, missing values.")
 
+                logging.info(
+                    f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, yaw={ball.rotation},"
+                    f" pitch={ball.pitch}, roll={ball.roll}, {ball.cur_action}, speed={ball.speed},"
+                    f" acceleration={ball.acceleration}, duty_cycle={ball.duty_cycle}")
                 return
 
     def register_ball(self, ball_id):

@@ -1,6 +1,6 @@
 #include "state_machine.h"
 
-volatile State current_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ACTION_INIT};
+volatile State current_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ACTION_INIT};
 volatile Target target = {0.0, 0.0, 0.0};
 
 void set_current_coordinates(float x, float y) {
@@ -256,9 +256,14 @@ void report_state_task(void *args) {
     while (1) {
         if (current_state.action != ACTION_INIT) {
 
-            int max_length = snprintf(NULL, 0, "%f %f %f %d", current_state.x, current_state.y, current_state.rotation, current_state.action);
+            int max_length = snprintf(NULL, 0, "%f %f %f %d %f %f %f %f %f",
+             current_state.x, current_state.y, current_state.rotation, current_state.action, current_state.roll,
+              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle);
+
             char message[max_length + 1]; 
-            snprintf(message, max_length + 1, "%f %f %f %d", current_state.x, current_state.y, current_state.rotation, current_state.action);
+            snprintf(message, max_length + 1, "%f %f %f %d %f %f %f %f %f",
+             current_state.x, current_state.y, current_state.rotation, current_state.action, current_state.roll,
+              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle);
 
             mqtt_publish_message(*mqtt_client, message);
 

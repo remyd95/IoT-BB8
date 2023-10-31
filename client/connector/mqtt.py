@@ -144,7 +144,7 @@ class MQTTClient:
                     self.state_handler(ball_name, state_update)
                 except ValueError:
                     logging.error("Invalid payload format: Unable to convert to numbers.")
-            elif len(payload) == 6:  # TODO: Also add speed and acceleration to state
+            elif len(payload) == 9:  # TODO: Also add speed and acceleration to state
                 try:
                     x = float(payload[0])
                     y = float(payload[1])
@@ -152,13 +152,19 @@ class MQTTClient:
                     action = int(payload[3])
                     pitch = float(payload[4])
                     roll = float(payload[5])
+                    speed = float(payload[6])
+                    acceleration = float(payload[7])
+                    duty_cycle = float(payload[8])
 
                     state_update = {'x': x,
                                     'y': y,
                                     'rotation': rotation,
                                     'action': action,
                                     'pitch': pitch,
-                                    'roll': roll
+                                    'roll': roll,
+                                    'speed': speed,
+                                    'acceleration': acceleration,
+                                    'duty_cycle': duty_cycle
                                     }
 
                     self.last_state_update[ball_name] = time.time()
@@ -166,7 +172,7 @@ class MQTTClient:
                 except ValueError:
                     logging.error("Invalid payload format: Unable to convert to numbers.")
             else:
-                logging.error("Invalid payload format: Expected 4 or 6 space-separated numbers.")
+                logging.error("Invalid payload format: Expected 4(legacy) or 9 space-separated numbers.")
 
     def remove_inactive_balls(self):
         """

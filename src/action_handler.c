@@ -39,12 +39,6 @@ void process_action(char* event_data) {
             float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
             set_current_action(ACTION_TURN_LEFT);
             set_target_duty_cycle(bounded_max_duty_cycle);
-
-            // OLD CODE - Keep for reference
-            //motor_action_data1.motor_id = MOTOR_LEFT;
-            //backward_callback(motor_action_data1);
-            //motor_action_data2.motor_id = MOTOR_RIGHT;
-            //forward_callback(motor_action_data2);
         }
     } else if (strncmp(event_data, "TR", 2) == 0) {
         float max_duty_cycle;
@@ -53,12 +47,6 @@ void process_action(char* event_data) {
             float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
             set_current_action(ACTION_TURN_RIGHT);
             set_target_duty_cycle(bounded_max_duty_cycle);
-
-            // OLD CODE - Keep for reference
-            //motor_action_data1.motor_id = MOTOR_LEFT;
-            //forward_callback(motor_action_data1);
-            //motor_action_data2.motor_id = MOTOR_RIGHT;
-            //backward_callback(motor_action_data2);
         }
     } else if (strncmp(event_data, "ST", 2) == 0) {
         set_current_action(ACTION_STOP);
