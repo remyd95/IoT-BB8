@@ -18,14 +18,20 @@ class Ball:
         # Internal state
         self.cur_action = None
         self.max_speed = 100
-        self.speed = None
-        self.acceleration = None
         self.x_pos = None
         self.y_pos = None
+
+        # IMU data
         self.rotation = None
         self.pitch = None
         self.roll = None
+        self.speed = None
+        self.acceleration = None
+
+        # Target location
         self.has_target_location = False
+        self.target_x_pos = None
+        self.target_y_pos = None
 
         # MQTT data
         self.topic = self.name + "/action"

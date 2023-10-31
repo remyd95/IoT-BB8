@@ -36,6 +36,7 @@ class ControlPanel:
     It provides a grid where the user can select a ball and place it on the grid.
     The user can also select a target location for the ball to move to.
     """
+
     def __init__(self, root, client_id, mqtt_connector):
         """
         Initializes the ControlPanel class
@@ -188,18 +189,21 @@ class ControlPanel:
         turn_right_button.grid(row=self.grid_row_offset + 5, column=0, padx=(325, 0))
 
         self.keyboard_button = tk.Button(self.root, text="Enable Keyboard Mode", command=self.toggle_keyboard)
-        self.keyboard_button.grid(row=self.grid_row_offset + 6, column=0, padx=(0, 250))
+        self.keyboard_button.grid(row=self.grid_row_offset + 6, column=0, padx=(0, 300))
 
         remove_target_button = tk.Button(self.root, text="Remove Target", command=self.remove_target)
-        remove_target_button.grid(row=self.grid_row_offset + 6, column=0, padx=(200, 0))
+        remove_target_button.grid(row=self.grid_row_offset + 6, column=0, padx=(25, 0))
+
+        move_to_target_button = tk.Button(self.root, text="Move To Target", command=self.move_to_target)
+        move_to_target_button.grid(row=self.grid_row_offset + 6, column=0, padx=(300, 0))
 
         max_speed_label = tk.Label(self.root, text="Max Speed:")
         max_speed_label.grid(row=self.grid_row_offset + 8, column=0, padx=(0, 150))
 
         self.max_speed_value = tk.IntVar()
         self.max_speed_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal",
-                                              variable=self.max_speed_value,
-                                              command=self.on_max_speed_update)
+                                         variable=self.max_speed_value,
+                                         command=self.on_max_speed_update)
         self.max_speed_slider.grid(row=self.grid_row_offset + 8, column=0, padx=(50, 0), pady=(0, 20))
         self.max_speed_slider.set(100)
 
@@ -348,9 +352,10 @@ class ControlPanel:
                         logging.warning(f"[GUI] Cannot set target location whehn keyboard mode is enabled.")
                         return
 
-                    # Create move objective
-                    self.move_to(data)
+                    # Set target location
                     self.selected_ball.has_target_location = True
+                    self.selected_ball.target_x_pos = grid_x
+                    self.selected_ball.target_y_pos = grid_y
 
                     # Draw red cross at target location
                     self.selected_ball.set_target_object((
@@ -437,6 +442,7 @@ class ControlPanel:
                                                          fg="white")
                     self.initial_ball_warning.grid(row=11, column=0)
                 return
+
     def on_max_speed_update(self, event):
         """
         Handles the max speed update event. If a ball is selected, the max speed right will be updated.
@@ -757,6 +763,21 @@ class ControlPanel:
                 self.canvas.delete(self.selected_ball.target_obj[1])
                 self.selected_ball.target_obj = None
                 self.selected_ball.has_target_location = False
+                self.selected_ball.target_x_pos = None
+                self.selected_ball.target_y_pos = None
+            else:
+                logging.error("[GUI] Action ignored, selected ball has no target location.")
+        else:
+            logging.error("[GUI] Action ignored, ball is not selected.")
+
+    def move_to_target(self):
+        """
+        Moves the selected ball to the target location. If no ball is selected, a warning will be logged.
+        :return: None
+        """
+        if self.selected_ball:
+            if self.selected_ball.has_target_location:
+                self.move_to({'x': self.selected_ball.target_x_pos, 'y': self.selected_ball.target_y_pos})
             else:
                 logging.error("[GUI] Action ignored, selected ball has no target location.")
         else:
