@@ -25,6 +25,7 @@ typedef struct {
     float rotation;
     float pitch;
     float roll;
+    float duty_cycle;
     float speed;
     float acceleration;
     int action;
@@ -33,7 +34,7 @@ typedef struct {
 typedef struct {
     float x;
     float y;
-    float speed;
+    float duty_cycle;
 } Target;
 
 
@@ -44,20 +45,24 @@ void set_current_coordinates(float x, float y);
 void set_current_action(int action);
 void set_current_rotation(float rotation);
 void set_current_speed(float speed);
+void set_current_duty_cycle(float duty_cycle);
 void set_current_acceleration(float acceleration);
 void set_current_pitch(float pitch);
 void set_current_roll(float roll);
 void set_target_coordinates(float x, float y);
-void set_target_speed(float speed);
+void set_target_duty_cycle(float duty_cycle);
 float get_current_x_pos();
 float get_current_y_pos();
 float get_current_rotation();
+float get_current_duty_cycle();
 float get_current_speed();
 float get_current_acceleration();
 float get_current_pitch();
 float get_current_roll();
 float get_target_x_pos();
 float get_target_y_pos();
-float get_target_speed();
+float get_target_duty_cycle();
 int get_current_action();
+State get_current_state();
+Target get_target();
 void report_state_task(void *args);

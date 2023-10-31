@@ -17,6 +17,19 @@ char ID_TOPIC[2] = "id";
 mqtt_client_data_t mqtt_data;
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
+    /**
+     * Handles MQTT events. The following events are handled:
+     * 1. MQTT_EVENT_CONNECTED: The ball is registered to the base station
+     * 2. MQTT_EVENT_DISCONNECTED: The ball is unregistered from the base station
+     * 3. MQTT_EVENT_DATA: The ball receives an action from the base station
+     * 
+     * @param handler_args: pointer to the event group
+     * @param base: event base
+     * @param event_id: event ID
+     * @param event_data: event data
+     * 
+     * @return void
+    */
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)event_data;
 
     mqtt_client_data_t* mqtt_data = (mqtt_client_data_t*)handler_args;
@@ -77,6 +90,15 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 }
 
 void identify_ball(esp_mqtt_client_handle_t client, char* event_data) {
+    /**
+     * Identifies the ball to the base station. This is in response to
+     * a find available ball request from client GUI
+     * 
+     * @param client: MQTT client handle
+     * @param event_data: event data
+     * 
+     * @return void
+    */
     if (strncmp(event_data, "FA", 2) == 0) {
         int client_id;
 
@@ -91,6 +113,15 @@ void identify_ball(esp_mqtt_client_handle_t client, char* event_data) {
 }
 
 void init_mqtt(EventGroupHandle_t *connection_event_group, esp_mqtt_client_handle_t *client, const char* broker_uri) {
+    /**
+     * Initializes the MQTT connection
+     * 
+     * @param connection_event_group: pointer to the event group
+     * @param client: MQTT client handle
+     * @param broker_uri: URI of the MQTT broker
+     * 
+     * @return void
+    */
     const esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri = broker_uri,
@@ -112,5 +143,13 @@ void init_mqtt(EventGroupHandle_t *connection_event_group, esp_mqtt_client_handl
 }
 
 void mqtt_publish_message(esp_mqtt_client_handle_t client, const char *message) {
+    /**
+     * Publishes a message to the MQTT broker
+     * 
+     * @param client: MQTT client handle
+     * @param message: message to publish
+     * 
+     * @return void
+    */
     esp_mqtt_client_publish(client, STATE_TOPIC, message, 0, 0, 0);
 }

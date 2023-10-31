@@ -1,5 +1,6 @@
 #include "imu.h"
 
+// calibration data, replace with offsets from calibration mode
 calibration_t cal = {
     .mag_offset = {.x = 10.193359, .y = -19.312500, .z = 33.644531},
     .mag_scale = {.x = 0.986733, .y = 1.013024, .z = 1.000590},
@@ -9,14 +10,14 @@ calibration_t cal = {
     .gyro_bias_offset = {.x = 0.365409, .y = 0.333483, .z = -1.597020}
 };
 
-/**
- * Transformation:
- *  - Rotate around Z axis 180 degrees
- *  - Rotate around X axis -90 degrees
- * @param  {object} s {x,y,z} sensor
- * @return {object}   {x,y,z} transformed
- */
 static void transform_accel_gyro(vector_t *v) {
+  /**
+   * Transformation: to get accelerometer and gyroscope aligned
+   * 
+   * @param  {object} s {x,y,z} sensor
+   * 
+   * @return {object}   {x,y,z} transformed
+   */
   float x = v->x;
   float y = v->y;
   float z = v->z;
@@ -26,12 +27,14 @@ static void transform_accel_gyro(vector_t *v) {
   v->z = z;
 }
 
-/**
- * Transformation: to get magnetometer aligned
- * @param  {object} s {x,y,z} sensor
- * @return {object}   {x,y,z} transformed
- */
 static void transform_mag(vector_t *v) {
+  /**
+   * Transformation: to get magnetometer aligned
+   * 
+   * @param  {object} s {x,y,z} sensor
+   * 
+   * @return {object}   {x,y,z} transformed
+   */
   float x = v->x;
   float y = v->y;
   float z = v->z;
@@ -42,24 +45,34 @@ static void transform_mag(vector_t *v) {
 }
 
 void pause_sample(void) {
+  /**
+   * Pause the IMU sampling to match the sample frequency
+   * 
+   * @return void
+   */
   static uint64_t start = 0;
   uint64_t end = xTaskGetTickCount() * 1000 / configTICK_RATE_HZ;
 
-  if (start == 0)
-  {
+  if (start == 0) {
     start = xTaskGetTickCount() / configTICK_RATE_HZ;
   }
 
   int32_t elapsed = end - start;
-  if (elapsed < SAMPLE_INTERVAL_MS)
-  {
+  if (elapsed < SAMPLE_INTERVAL_MS) {
     vTaskDelay((SAMPLE_INTERVAL_MS - elapsed) / portTICK_PERIOD_MS);
   }
+
   start = xTaskGetTickCount() * 1000 / configTICK_RATE_HZ;
 }
 
 static void run_imu(imu_data_t *imu_data) {
-
+  /**
+   * Run IMU task
+   * 
+   * @param imu_data: pointer to imu_data_t struct
+   * 
+   * @return void
+   */
   i2c_mpu9250_init(&cal, I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);
   ahrs_init(SAMPLE_FREQ_Hz, BETA);
 
@@ -98,22 +111,31 @@ static void run_imu(imu_data_t *imu_data) {
 }
 
 static void imu_cleanup(void) {
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    i2c_driver_delete(I2C_MASTER_NUM);
-    vTaskDelete(NULL);
+  /**
+   * Cleanup function for IMU
+   * 
+   * @return void
+   */
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  i2c_driver_delete(I2C_MASTER_NUM);
+  vTaskDelete(NULL);
 }
 
 void imu_task(void *args) {
+  /**
+   * IMU task function for scheduling
+   * 
+   * @param args 
+   */  
+  imu_data_t* imu_data = (imu_data_t*)args;    
+  #ifdef CONFIG_CALIBRATION_MODE
+      calibrate_gyro();
+      calibrate_accel();
+      calibrate_mag();
+  #else
+      run_imu(imu_data);
+  #endif
 
-    imu_data_t* imu_data = (imu_data_t*)args;    
-    #ifdef CONFIG_CALIBRATION_MODE
-        calibrate_gyro();
-        calibrate_accel();
-        calibrate_mag();
-    #else
-        run_imu(imu_data);
-    #endif
-
-    //If IMU stopped, cleanup
-    imu_cleanup();
+  //If IMU stopped, cleanup
+  imu_cleanup();
 }

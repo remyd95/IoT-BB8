@@ -62,8 +62,8 @@ class ControlPanel:
         self.canvas = None
 
         # Tkinter menu variables
-        self.max_speed_value = None
-        self.max_speed_slider = None
+        self.max_duty_cycle_value = None
+        self.max_duty_cycle_slider = None
         self.ball_selector = None
         self.grid_position = None
         self.ball_selector_value = None
@@ -197,15 +197,15 @@ class ControlPanel:
         move_to_target_button = tk.Button(self.root, text="Move To Target", command=self.move_to_target)
         move_to_target_button.grid(row=self.grid_row_offset + 6, column=0, padx=(300, 0))
 
-        max_speed_label = tk.Label(self.root, text="Max Speed:")
-        max_speed_label.grid(row=self.grid_row_offset + 8, column=0, padx=(0, 150))
+        max_duty_cycle_label = tk.Label(self.root, text="Max Duty Cycle:")
+        max_duty_cycle_label.grid(row=self.grid_row_offset + 8, column=0, padx=(0, 180))
 
-        self.max_speed_value = tk.IntVar()
-        self.max_speed_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal",
-                                         variable=self.max_speed_value,
-                                         command=self.on_max_speed_update)
-        self.max_speed_slider.grid(row=self.grid_row_offset + 8, column=0, padx=(50, 0), pady=(0, 20))
-        self.max_speed_slider.set(100)
+        self.max_duty_cycle_value = tk.IntVar()
+        self.max_duty_cycle_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal",
+                                         variable=self.max_duty_cycle_value,
+                                         command=self.on_max_duty_cycle_update)
+        self.max_duty_cycle_slider.grid(row=self.grid_row_offset + 8, column=0, padx=(50, 0), pady=(0, 20))
+        self.max_duty_cycle_slider.set(100)
 
         imu_header = tk.Label(self.root, text=f"\t\tIMU Data:\t\t")
         imu_header.grid(row=1, column=1)
@@ -433,7 +433,7 @@ class ControlPanel:
         for ball in self.balls:
             if ball.name == selected_ball:
                 self.selected_ball = ball
-                self.max_speed_slider.set(self.selected_ball.max_speed)
+                self.max_duty_cycle_slider.set(self.selected_ball.max_duty_cycle)
                 if ball.gui_obj is None:
                     # If ball not placed show a warning
                     self.initial_ball_warning = tk.Label(self.root,
@@ -443,15 +443,15 @@ class ControlPanel:
                     self.initial_ball_warning.grid(row=11, column=0)
                 return
 
-    def on_max_speed_update(self, event):
+    def on_max_duty_cycle_update(self, event):
         """
-        Handles the max speed update event. If a ball is selected, the max speed right will be updated.
-        :param event: The max speed slider event
+        Handles the max duty cycle update event. If a ball is selected, the max duty cycle right will be updated.
+        :param event: The max duty cycle slider event
         :return: None
         """
         if self.selected_ball and self.selected_ball.gui_obj:
-            new_max_speed = self.max_speed_value.get()
-            self.selected_ball.max_speed = new_max_speed
+            new_max_duty_cycle = self.max_duty_cycle_value.get()
+            self.selected_ball.max_duty_cycle = new_max_duty_cycle
 
     def update_state(self, ball_name, state_update, create_ball=False):
         """
@@ -547,7 +547,7 @@ class ControlPanel:
                         imu_label = self.imu_labels[ball_name]
                         imu_label.config(
                             text=f"{ball_name} - Yaw: {yaw}, Pitch: {pitch}, Roll: {roll}\n"
-                                 f"\tSpeed: -, Accel: -"
+                                 f"\tSpeed: -, Accel: -, Duty: -"
                         )
                     except KeyError:
                         logging.warning("State update does not contain Pitch or Roll")
@@ -570,7 +570,7 @@ class ControlPanel:
             self.mqtt_connector.subscribe(registered_ball.name + "/state")
 
             imu_label = tk.Label(self.root, text=f"{registered_ball.name} - Yaw: -, Pitch: -, Roll: -\n"
-                                                 f"\tSpeed: -, Accel: -")
+                                                 f"\tSpeed: -, Accel: -, Duty: -")
             imu_label.grid(row=len(self.balls) + 1, column=1)
             self.imu_labels[registered_ball.name] = imu_label
 
@@ -648,7 +648,7 @@ class ControlPanel:
             if self.initial_ball_warning:
                 self.initial_ball_warning.destroy()
             self.ball_selector.set('Select a ball')
-            self.max_speed_slider.set(100)
+            self.max_duty_cycle_slider.set(100)
             self.selected_ball = None
 
         logging.info(f"[GUI] Disconnected ball: {ball.name}")
@@ -695,8 +695,8 @@ class ControlPanel:
             if self.selected_ball.has_target_location:
                 logging.warning(f"[GUI] Action not permitted because {self.selected_ball.name} has a target")
                 return
-            speed = self.max_speed_value.get()
-            data = {'speed': speed}
+            max_duty_cycle = self.max_duty_cycle_value.get()
+            data = {'max_duty_cycle': max_duty_cycle}
             self.selected_ball.action(action_type, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
@@ -708,7 +708,7 @@ class ControlPanel:
         :return: None
         """
         if self.selected_ball:
-            data['speed'] = self.max_speed_value.get()
+            data['max_duty_cycle'] = self.max_duty_cycle_value.get()
             self.selected_ball.action(ActionType.MOVETO, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")

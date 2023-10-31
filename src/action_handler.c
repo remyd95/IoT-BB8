@@ -8,30 +8,37 @@
 #include <freertos/task.h>
 
 
-void process_action(char* event_data){
+void process_action(char* event_data) {
+    /**
+     * Process the action received from the MQTT broker
+     * 
+     * @param event_data The data received from the MQTT broker
+     * 
+     * @return void
+    */
     if (strncmp(event_data, "FW", 2) == 0) {
-        float target_speed;
+        float max_duty_cycle;
 
-        if (sscanf(event_data, "FW %f", &target_speed) == 1) {
-            float bounded_target_speed = bound_max_speed(target_speed);
+        if (sscanf(event_data, "FW %f", &max_duty_cycle) == 1) {
+            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
             set_current_action(ACTION_FORWARD);
-            set_target_speed(bounded_target_speed);
+            set_target_duty_cycle(bounded_max_duty_cycle);
         }
     } else if (strncmp(event_data, "BW", 2) == 0) {
-        float target_speed;
+        float max_duty_cycle;
 
-        if (sscanf(event_data, "BW %f", &target_speed) == 1) {
-            float bounded_target_speed = bound_max_speed(target_speed);
+        if (sscanf(event_data, "BW %f", &max_duty_cycle) == 1) {
+            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
             set_current_action(ACTION_BACKWARD);
-            set_target_speed(bounded_target_speed);
+            set_target_duty_cycle(bounded_max_duty_cycle);
         }
     } else if (strncmp(event_data, "TL", 2) == 0) {
-        float target_speed;
+        float max_duty_cycle;
 
-        if (sscanf(event_data, "TL %f", &target_speed) == 1) {
-            float bounded_target_speed = bound_max_speed(target_speed);
+        if (sscanf(event_data, "TL %f", &max_duty_cycle) == 1) {
+            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
             set_current_action(ACTION_TURN_LEFT);
-            set_target_speed(bounded_target_speed);
+            set_target_duty_cycle(bounded_max_duty_cycle);
 
             // OLD CODE - Keep for reference
             //motor_action_data1.motor_id = MOTOR_LEFT;
@@ -40,12 +47,12 @@ void process_action(char* event_data){
             //forward_callback(motor_action_data2);
         }
     } else if (strncmp(event_data, "TR", 2) == 0) {
-        float target_speed;
+        float max_duty_cycle;
 
-        if (sscanf(event_data, "TR %f", &target_speed) == 1) {
-            float bounded_target_speed = bound_max_speed(target_speed);
+        if (sscanf(event_data, "TR %f", &max_duty_cycle) == 1) {
+            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
             set_current_action(ACTION_TURN_RIGHT);
-            set_target_speed(bounded_target_speed);
+            set_target_duty_cycle(bounded_max_duty_cycle);
 
             // OLD CODE - Keep for reference
             //motor_action_data1.motor_id = MOTOR_LEFT;
@@ -55,16 +62,16 @@ void process_action(char* event_data){
         }
     } else if (strncmp(event_data, "ST", 2) == 0) {
         set_current_action(ACTION_STOP);
-        set_target_speed(0.0);
+        set_target_duty_cycle(0.0);
     } else if (strncmp(event_data, "MT", 2) == 0) {
-        float x, y, target_speed;
+        float x, y, max_duty_cycle;
 
-        if (sscanf(event_data, "MT %f %f %f", &x, &y, &target_speed) == 3) {
+        if (sscanf(event_data, "MT %f %f %f", &x, &y, &max_duty_cycle) == 3) {
             // Change action data to contains these args?
-            float bounded_target_speed = bound_max_speed(target_speed);
+            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
             set_current_action(ACTION_MOVETO);
             set_target_coordinates(x, y);
-            set_target_speed(bounded_target_speed);
+            set_target_duty_cycle(bounded_max_duty_cycle);
         }
     } else if (strncmp(event_data, "IN", 2) == 0) {
         float x, y;

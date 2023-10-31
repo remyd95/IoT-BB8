@@ -42,6 +42,11 @@ static calibration_t cal = {
   };
 
 void wait(void) {
+  /**
+   * Wait for 10 seconds, printing the time remaining.
+   * 
+   * @return void
+   */
   for (int i = 10; i >= 0; i -= 1) {
     printf("Starting in %d seconds     \r", i);
     fflush(stdout);
@@ -51,6 +56,11 @@ void wait(void) {
 }
 
 static void init_imu(void) {
+  /**
+   * Initialise the IMU.
+   * 
+   * @return void
+   */
   static bool init_imu_done = false;
 
   if (init_imu_done) {
@@ -76,6 +86,11 @@ static void init_imu(void) {
 const int NUM_GYRO_READS = 20000;
 
 void calibrate_gyro(void) {
+  /**
+   * Calibrate the Gyro.
+   * 
+   * @return void
+   */
   init_imu();
 
   ESP_LOGI(TAG, "--- GYRO CALIBRATION ---");
@@ -150,6 +165,14 @@ vector_t scale_hi = {.x = 0, .y = 0, .z = 0};
  * This will syncronuously read the accel data from MPU9250.  It will gather the offset and scalar values.
  */
 void calibrate_accel_axis(int axis, int dir) {
+  /**
+   * Calibrate the accelerometer for a given axis and direction.
+   * 
+   * @param axis The axis to calibrate.
+   * @param dir The direction to calibrate.
+   * 
+   * @return void
+   */
   vector_t va;
 
   ESP_LOGI(TAG, "Reading values - hold still");
@@ -204,12 +227,25 @@ void calibrate_accel_axis(int axis, int dir) {
  * Set up the next capture for an axis and a direction (up / down).
  */
 void run_next_capture(int axis, int dir) {
+  /**
+   * Run the next capture for an axis and a direction.
+   * 
+   * @param axis The axis to capture.
+   * @param dir The direction to capture.
+   * 
+   * @return void
+   */
   ESP_LOGW(TAG, "Point the %s axis arrow %s.", axes[axis], directions[dir]);
   wait();
   calibrate_accel_axis(axis, dir);
 }
 
 void calibrate_accel(void) {
+  /**
+   * Calibrate the accelerometer.
+   * 
+   * @return void
+   */
   init_imu();
 
   ESP_LOGI(TAG, "--- ACCEL CALIBRATION ---");
@@ -253,7 +289,11 @@ void calibrate_accel(void) {
 #define MAX(a, b) (a > b ? a : b)
 
 void calibrate_mag(void) {
-
+  /**
+   * Calibrate the magnetometer.
+   * 
+   * @return void
+   */
   vector_t v_min = {
       .x = 9.9e99,
       .y = 9.9e99,
