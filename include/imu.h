@@ -23,9 +23,9 @@
 #define I2C_MASTER_NUM I2C_NUM_0
 //#define CONFIG_CALIBRATION_MODE
 
-#define SAMPLE_FREQ_Hz 8000
+#define SAMPLE_FREQ_Hz 200.0f
 #define SAMPLE_INTERVAL_MS (1000 / SAMPLE_FREQ_Hz) // Sample Rate in milliseconds
-#define BETA 0.5
+#define BETA 0.2f
 #define DEG2RAD(deg) (deg * M_PI / 180.0f)
 
 typedef struct {

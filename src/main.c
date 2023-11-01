@@ -115,7 +115,7 @@ void app_main() {
     init_wifi(&connection_event_group, ssid, password);
     init_mqtt(&connection_event_group, &mqtt_client, broker_uri);
 
-    //xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
+    xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
     xTaskCreate(report_state_task, "state_task", 4096, &mqtt_client, 10, NULL);
     xTaskCreate(test_connection_task, "test_connection_task", 4096, NULL, 10, NULL);
 
@@ -141,6 +141,13 @@ void app_main() {
             } else {
                 adjusted_duty_cycle = target.duty_cycle;
             }
+
+            // Better way to compute adjusted duty cycle for a smooth acceleration below:
+            // adjusted_duty_cycle = current_state.duty_cycle + (target.duty_cycle - current_state.duty_cycle) * ACCEL_STEP_SIZE;
+            
+
+
+
 
             motor_action_data.duty_cycle_left = adjusted_duty_cycle;
             motor_action_data.duty_cycle_right = adjusted_duty_cycle;

@@ -2,37 +2,35 @@
 
 // calibration data, replace with offsets from calibration mode
 calibration_t cal = {
-    .mag_offset = {.x = 10.193359, .y = -19.312500, .z = 33.644531},
-    .mag_scale = {.x = 0.986733, .y = 1.013024, .z = 1.000590},
-    .accel_offset = {.x = 0.030903, .y = 0.095585, .z = -0.122952},
-    .accel_scale_lo = {.x = 1.009745, .y = 1.015059, .z = 0.975763},
-    .accel_scale_hi = {.x = -0.985120, .y = -0.985946, .z = -1.045682},
-    .gyro_bias_offset = {.x = 0.365409, .y = 0.333483, .z = -1.597020}
+    .mag_offset = {.x = -14.390625, .y = 26.468750, .z = -12.181641},
+    .mag_scale = {.x = 1.011759, .y = 1.016019, .z = 0.973342},
+    .accel_offset = {.x = 0.021837, .y = 0.043132, .z = -0.144693},
+    .accel_scale_lo = {.x = 1.011026, .y = 1.013828, .z = 0.974942},
+    .accel_scale_hi = {.x = -0.987007, .y = -0.980326, .z = -1.048787},
+    .gyro_bias_offset = {.x = 0.582807, .y = 0.661291, .z = -1.661415}
 };
 
 static void transform_accel_gyro(vector_t *v) {
   /**
-   * Transformation: to get accelerometer and gyroscope aligned
-   * 
+   * Transformation:
+   *  - Rotate around Z axis 180 degrees
+   *  - Rotate around X axis -90 degrees
    * @param  {object} s {x,y,z} sensor
-   * 
    * @return {object}   {x,y,z} transformed
-   */
+  */
   float x = v->x;
   float y = v->y;
   float z = v->z;
 
   v->x = -x;
-  v->y = -y;
-  v->z = z;
+  v->y = -z;
+  v->z = -y;
 }
 
 static void transform_mag(vector_t *v) {
   /**
    * Transformation: to get magnetometer aligned
-   * 
    * @param  {object} s {x,y,z} sensor
-   * 
    * @return {object}   {x,y,z} transformed
    */
   float x = v->x;
@@ -40,8 +38,8 @@ static void transform_mag(vector_t *v) {
   float z = v->z;
 
   v->x = -y;
-  v->y = -x;
-  v->z = -z;
+  v->y = z;
+  v->z = -x;
 }
 
 void pause_sample(void) {
