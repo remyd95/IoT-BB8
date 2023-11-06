@@ -1,73 +1,337 @@
-#include "action_handler.h"
-#include "util.h"
+#include <action_handler.h>
 #include "state_machine.h"
 
-#include <math.h>
-#include <string.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 
-
-void process_action(char* event_data) {
+int process_objective_switch(int previous_objective, int current_objective) {
     /**
-     * Process the action received from the MQTT broker
+     * Process the objective switch
      * 
-     * @param event_data The data received from the MQTT broker
+     * @param previous_objective The previous objective
+     * @param current_objective The current objective
+     * 
+     * @return 1 if the objective has changed, 0 otherwise
+    */
+    if (previous_objective != current_objective) {
+        set_current_action(ACTION_STOP);
+        return 1;
+    }
+    return 0;
+}
+
+void process_objective(State state, Target target, int previous_objective) {
+    /**
+     * Process the objective based on the current state and target
+     * Objectives are more complex than actions, e.g. move to a specific location
+     * 
+     * @param state The current state
+     * @param target The target state
+     * @param previous_objective The previous objective
      * 
      * @return void
     */
-    if (strncmp(event_data, "FW", 2) == 0) {
-        float max_duty_cycle;
 
-        if (sscanf(event_data, "FW %f", &max_duty_cycle) == 1) {
-            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
-            set_current_action(ACTION_FORWARD);
-            set_target_duty_cycle(bounded_max_duty_cycle);
-        }
-    } else if (strncmp(event_data, "BW", 2) == 0) {
-        float max_duty_cycle;
-
-        if (sscanf(event_data, "BW %f", &max_duty_cycle) == 1) {
-            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
-            set_current_action(ACTION_BACKWARD);
-            set_target_duty_cycle(bounded_max_duty_cycle);
-        }
-    } else if (strncmp(event_data, "TL", 2) == 0) {
-        float max_duty_cycle;
-
-        if (sscanf(event_data, "TL %f", &max_duty_cycle) == 1) {
-            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
-            set_current_action(ACTION_TURN_LEFT);
-            set_target_duty_cycle(bounded_max_duty_cycle);
-        }
-    } else if (strncmp(event_data, "TR", 2) == 0) {
-        float max_duty_cycle;
-
-        if (sscanf(event_data, "TR %f", &max_duty_cycle) == 1) {
-            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
-            set_current_action(ACTION_TURN_RIGHT);
-            set_target_duty_cycle(bounded_max_duty_cycle);
-        }
-    } else if (strncmp(event_data, "ST", 2) == 0) {
-        set_current_action(ACTION_STOP);
-        set_target_duty_cycle(0.0);
-    } else if (strncmp(event_data, "MT", 2) == 0) {
-        float x, y, max_duty_cycle;
-
-        if (sscanf(event_data, "MT %f %f %f", &x, &y, &max_duty_cycle) == 3) {
-            // Change action data to contains these args?
-            float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
-            set_current_action(ACTION_MOVETO);
-            set_target_coordinates(x, y);
-            set_target_duty_cycle(bounded_max_duty_cycle);
-        }
-    } else if (strncmp(event_data, "IN", 2) == 0) {
-        float x, y;
-        if (sscanf(event_data, "IN %f %f", &x, &y) == 2) {
-            set_current_coordinates(x, y);
-            set_current_action(ACTION_IDLE); // After initialization set to idle
-        }
-    } else if (strncmp(event_data, "RB", 2) == 0) {
-        esp_restart();
+    if (process_objective_switch(previous_objective, state.objective)) {
+        return;
     }
+
+    if (state.objective == OBJECTIVE_NONE) {
+        return;
+    }
+
+    if (state.objective == OBJECTIVE_FORWARD) {
+        if (state.action == ACTION_NONE) {
+            set_current_action(ACTION_FORWARD);
+            return;
+        }
+        return;
+    }  
+
+    if (state.objective == OBJECTIVE_BACKWARD) {
+        if (state.action == ACTION_NONE) {
+            set_current_action(ACTION_BACKWARD);
+            return;
+        }
+        return;
+    }
+
+    if (state.objective == OBJECTIVE_STOP) {
+        if (state.action == ACTION_NONE) {
+            set_current_objective(OBJECTIVE_NONE);
+            return;
+        }
+        return;
+    }  
+
+    if (state.objective == OBJECTIVE_TURN_LEFT) {
+        if (state.action == ACTION_NONE) {
+            set_current_action(ACTION_TURN_LEFT);
+            return;
+        }
+        return;
+    }
+
+    if (state.objective == OBJECTIVE_TURN_RIGHT) {
+        if (state.action == ACTION_NONE) {
+            set_current_action(ACTION_TURN_RIGHT);
+            return;
+        }
+        return;
+    }  
+
+    if (state.objective == OBJECTIVE_MOVETO) {
+
+        // Wait with processing until the previous action is terminated
+        if (state.action == ACTION_STOP) {
+            return;
+        }
+
+        float target_x = target.x;
+        float target_y = target.y;
+
+        float current_x = get_current_x_pos();
+        float current_y = get_current_y_pos();
+
+        float current_yaw = get_current_rotation();
+        float current_duty_cycle = get_current_duty_cycle();
+
+        float distance_to_target = sqrt(pow(target_x - current_x, 2) + pow(target_y - current_y, 2));
+        float angle_to_target = atan2(target_y - current_y, target_x - current_x) * (180.0 / M_PI);
+
+        // Align angle to axis where 0 degrees is straight ahead
+        angle_to_target = angle_to_target - 90.0;
+
+        if (angle_to_target < 0.0) {
+            angle_to_target += 360.0;
+        }
+
+        angle_to_target = fabs(angle_to_target - 360.0);
+    
+        printf("Angle to target: %f\n", angle_to_target);
+        float angle_difference = current_yaw - angle_to_target;
+
+        if (angle_difference > 180.0) {
+            angle_difference -= 360.0;
+        } else if (angle_difference < -180.0) {
+            angle_difference += 360.0;
+        }
+
+        float angle_difference_abs = fabs(angle_difference);
+
+        printf("DISTANCE TARGET= %f\n", distance_to_target);
+        printf("ANGLE DIFFERENCE= %f\n", angle_difference);
+        
+        // TODO: Rotate to target if angle difference is large enough
+        if (angle_difference_abs > 10.0) {
+            if (angle_difference > 0.0) {
+                printf("TURN RIGHT\n");
+            } else {
+                printf("TURN LEFT\n");
+            }
+        } else if (distance_to_target > TARGET_OFFSET) {
+            printf("MOVE FORWARD\n");
+        } else {
+            printf("STOP\n");
+        }
+        
+        // TODO: If angle difference is small enough, move forward to target
+
+        // TODO: If distance to target is small enough, stop
+
+        return;
+    }
+    return;
+}
+
+void process_action(State state, Target target) {
+    /**
+     * Process the action based on the current state and target
+     * Actions are the simplest form of movement, e.g. forward, backward, turn left, turn right
+     * 
+     * @param state The current state
+     * @param target The target state
+     * 
+     * @return void
+    */
+    if (state.action == ACTION_NONE) {
+        return;
+    }
+    else if (state.action == ACTION_STOP) {
+        stop_action(state);
+        return;
+    }
+    else if (state.action == ACTION_FORWARD) {
+        forward_action(state, target);
+        return;
+    }
+    else if (state.action == ACTION_BACKWARD) {
+        backward_action(state, target);
+        return;
+    }
+    else if (state.action == ACTION_TURN_LEFT) {
+        turn_left_action(state, target);
+        return;
+    }
+    else if (state.action == ACTION_TURN_RIGHT) {
+        turn_right_action(state, target);
+        return;
+    }
+    return;
+}
+
+void stop_action(State state) {
+    /**
+     * Stop the motors
+     * 
+     * @param state The current state
+     * 
+     * @return void
+    */
+    motor_action_data_t motor_action_data;
+    motor_action_data.motor_id = MOTOR_ALL;
+
+    // Check safely if duty cycle is float 0
+    if (state.duty_cycle < EPSILON) {
+        pwm_stop_action(motor_action_data);
+        set_current_action(ACTION_NONE);
+        return;
+    }
+
+    float adjusted_duty_cycle = state.duty_cycle;
+
+    if (state.duty_cycle > EPSILON + BRAKE_STEP_SIZE) {
+        adjusted_duty_cycle -= BRAKE_STEP_SIZE;
+    } else {
+        adjusted_duty_cycle = 0.0f;
+    }
+
+    motor_action_data.duty_cycle_left = adjusted_duty_cycle;
+    motor_action_data.duty_cycle_right = adjusted_duty_cycle;
+    pwm_forward_action(motor_action_data);
+    set_current_duty_cycle(adjusted_duty_cycle);    
+
+    return;
+}
+
+void forward_action(State state, Target target) {
+    /**
+     * Move forward
+     * 
+     * @param state The current state
+     * @param target The target state
+     * 
+     * @return void
+    */
+    motor_action_data_t motor_action_data;
+    motor_action_data.motor_id = MOTOR_ALL;
+
+    float adjusted_duty_cycle = current_state.duty_cycle;
+
+    if (current_state.duty_cycle < target.duty_cycle - ACCEL_STEP_SIZE) {
+        adjusted_duty_cycle += ACCEL_STEP_SIZE;
+    } else {
+        adjusted_duty_cycle = target.duty_cycle;
+    }
+
+    motor_action_data.duty_cycle_left = adjusted_duty_cycle;
+    motor_action_data.duty_cycle_right = adjusted_duty_cycle;
+
+    pwm_forward_action(motor_action_data);
+    set_current_duty_cycle(adjusted_duty_cycle);
+    
+    return;
+}
+
+void backward_action(State state, Target target) {
+    /**
+     * Move backward
+     * 
+     * @param state The current state
+     * @param target The target state
+     * 
+     * @return void
+    */
+    motor_action_data_t motor_action_data;
+    motor_action_data.motor_id = MOTOR_ALL;
+
+    float adjusted_duty_cycle = current_state.duty_cycle;
+
+    if (current_state.duty_cycle < target.duty_cycle - ACCEL_STEP_SIZE) {
+        adjusted_duty_cycle += ACCEL_STEP_SIZE;
+    } else {
+        adjusted_duty_cycle = target.duty_cycle;
+    }
+
+    motor_action_data.duty_cycle_left = adjusted_duty_cycle;
+    motor_action_data.duty_cycle_right = adjusted_duty_cycle;
+
+    pwm_backward_action(motor_action_data);
+    set_current_duty_cycle(adjusted_duty_cycle);
+    
+    return;
+}
+
+void turn_left_action(State state, Target target) {
+    /**
+     * Turn left
+     * 
+     * @param state The current state
+     * @param target The target state
+     * 
+     * @return void
+    */
+    motor_action_data_t motor_action_data_left;
+    motor_action_data_t motor_action_data_right;
+
+    float adjusted_duty_cycle = current_state.duty_cycle;
+
+    if (current_state.duty_cycle < target.duty_cycle - TURN_STEP_SIZE) {
+        adjusted_duty_cycle += TURN_STEP_SIZE;
+    } else {
+        adjusted_duty_cycle = target.duty_cycle;
+    }
+
+    motor_action_data_left.duty_cycle_left = adjusted_duty_cycle;
+    motor_action_data_left.duty_cycle_right = adjusted_duty_cycle;
+    motor_action_data_right.duty_cycle_left = adjusted_duty_cycle;
+    motor_action_data_right.duty_cycle_right = adjusted_duty_cycle;
+
+    motor_action_data_left.motor_id = MOTOR_LEFT;
+    pwm_backward_action(motor_action_data_left);
+    motor_action_data_right.motor_id = MOTOR_RIGHT;
+    pwm_forward_action(motor_action_data_right);
+
+    set_current_duty_cycle(adjusted_duty_cycle);
+}
+
+void turn_right_action(State state, Target target) {
+    /**
+     * Turn right
+     * 
+     * @param state The current state
+     * @param target The target state
+     * 
+     * @return void
+    */
+    motor_action_data_t motor_action_data_left;
+    motor_action_data_t motor_action_data_right;
+
+    float adjusted_duty_cycle = current_state.duty_cycle;
+
+    if (current_state.duty_cycle < target.duty_cycle - TURN_STEP_SIZE) {
+        adjusted_duty_cycle += TURN_STEP_SIZE;
+    } else {
+        adjusted_duty_cycle = target.duty_cycle;
+    }
+
+    motor_action_data_left.duty_cycle_left = adjusted_duty_cycle;
+    motor_action_data_left.duty_cycle_right = adjusted_duty_cycle;
+    motor_action_data_right.duty_cycle_left = adjusted_duty_cycle;
+    motor_action_data_right.duty_cycle_right = adjusted_duty_cycle;
+
+    motor_action_data_left.motor_id = MOTOR_LEFT;
+    pwm_forward_action(motor_action_data_left);
+    motor_action_data_right.motor_id = MOTOR_RIGHT;
+    pwm_backward_action(motor_action_data_right);
+
+    set_current_duty_cycle(adjusted_duty_cycle);
 }

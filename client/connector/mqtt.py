@@ -126,25 +126,7 @@ class MQTTClient:
             ball_name = msg.topic.split('/')[0]
             payload = msg.payload.decode('utf-8').split()
 
-            # Legacy payload (prior to imu)
-            if len(payload) == 4:
-                try:
-                    x = float(payload[0])
-                    y = float(payload[1])
-                    rotation = float(payload[2])
-                    action = int(payload[3])
-
-                    state_update = {'x': x,
-                                    'y': y,
-                                    'rotation': rotation,
-                                    'action': action
-                                    }
-
-                    self.last_state_update[ball_name] = time.time()
-                    self.state_handler(ball_name, state_update)
-                except ValueError:
-                    logging.error("Invalid payload format: Unable to convert to numbers.")
-            elif len(payload) == 9:  # TODO: Also add speed and acceleration to state
+            if len(payload) == 10:
                 try:
                     x = float(payload[0])
                     y = float(payload[1])
@@ -155,6 +137,7 @@ class MQTTClient:
                     speed = float(payload[6])
                     acceleration = float(payload[7])
                     duty_cycle = float(payload[8])
+                    objective = int(payload[9])
 
                     state_update = {'x': x,
                                     'y': y,
@@ -164,7 +147,8 @@ class MQTTClient:
                                     'roll': roll,
                                     'speed': speed,
                                     'acceleration': acceleration,
-                                    'duty_cycle': duty_cycle
+                                    'duty_cycle': duty_cycle,
+                                    'objective': objective
                                     }
 
                     self.last_state_update[ball_name] = time.time()
@@ -172,7 +156,7 @@ class MQTTClient:
                 except ValueError:
                     logging.error("Invalid payload format: Unable to convert to numbers.")
             else:
-                logging.error("Invalid payload format: Expected 4(legacy) or 9 space-separated numbers.")
+                logging.error("Invalid payload format: Expected 10 space-separated values.")
 
     def remove_inactive_balls(self):
         """

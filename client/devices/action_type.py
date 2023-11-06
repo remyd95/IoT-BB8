@@ -7,14 +7,11 @@ class ActionType(Enum):
     Caution: These values should match the ones programmed in the ball.
     """
     IDLE = 0
-    MOVETO = 1
-    FORWARD = 2
-    BACKWARD = 3
-    STOP = 4
-    INIT = 5
-    REBOOT = 6
-    TURN_LEFT = 7
-    TURN_RIGHT = 8
+    FORWARD = 1
+    BACKWARD = 2
+    STOP = 3
+    TURN_LEFT = 4
+    TURN_RIGHT = 5
     UNDEFINED = -1
 
 

@@ -1,4 +1,5 @@
-from devices.action_type import ActionType, get_action_from_value
+from devices.action_type import get_action_from_value
+from devices.objective_type import ObjectiveType, get_objective_from_value
 from devices.ball import Ball
 
 import atexit
@@ -202,8 +203,8 @@ class ControlPanel:
 
         self.max_duty_cycle_value = tk.IntVar()
         self.max_duty_cycle_slider = tk.Scale(self.root, from_=0, to=100, orient="horizontal",
-                                         variable=self.max_duty_cycle_value,
-                                         command=self.on_max_duty_cycle_update)
+                                              variable=self.max_duty_cycle_value,
+                                              command=self.on_max_duty_cycle_update)
         self.max_duty_cycle_slider.grid(row=self.grid_row_offset + 8, column=0, padx=(50, 0), pady=(0, 20))
         self.max_duty_cycle_slider.set(100)
 
@@ -465,13 +466,26 @@ class ControlPanel:
         """
         for ball in self.balls:
             if ball.name == ball_name:
-                if ball.gui_obj:
-                    # Retrieve data from state update
+
+                if ball_name in self.imu_labels:
                     ball.x_pos = state_update['x']
                     ball.y_pos = state_update['y']
+                    ball.action = get_action_from_value(state_update['action'])
+                    ball.objective = get_objective_from_value(state_update['objective'])
                     ball.rotation = state_update['rotation']
-                    ball.cur_action = get_action_from_value(state_update['action'])
+                    ball.pitch = state_update['pitch']
+                    ball.roll = state_update['roll']
+                    ball.speed = state_update['speed']
+                    ball.acceleration = state_update['acceleration']
+                    ball.duty_cycle = state_update['duty_cycle']
+                    imu_label = self.imu_labels[ball_name]
 
+                    imu_label.config(
+                        text=f"{ball_name} - Yaw: {round(ball.rotation, 2)}, Pitch: {round(ball.pitch, 2)}, Roll: {round(ball.roll, 2)}\n"
+                             f"\tSpeed: {round(ball.speed, 2)}, Accel: {round(ball.acceleration, 2)}, Duty: {round(ball.duty_cycle, 2)}"
+                    )
+
+                if ball.gui_obj:
                     # Clear old GUI components
                     self.canvas.delete(ball.gui_obj)
                     self.canvas.delete(ball.position_label)
@@ -502,7 +516,7 @@ class ControlPanel:
                                                               fill="green", arrow=tk.LAST, width=arrow_width)
                     ball.set_direction_object(direction_arrow)
 
-                elif create_ball and get_action_from_value(state_update['action']) != ActionType.INIT:
+                elif create_ball and get_objective_from_value(state_update['objective']) != ObjectiveType.INIT:
                     canvas_x, canvas_y = self.grid_to_canvas_coords(state_update['x'], state_update['y'])
 
                     if ball.gui_obj is None:
@@ -528,25 +542,9 @@ class ControlPanel:
                         ball.x_pos = state_update['x']
                         ball.y_pos = state_update['y']
 
-                if ball_name in self.imu_labels:
-                    yaw = state_update['rotation']
-                    try:
-                        ball.pitch = state_update['pitch']
-                        ball.roll = state_update['roll']
-                        ball.speed = state_update['speed']
-                        ball.acceleration = state_update['acceleration']
-                        ball.duty_cycle = state_update['duty_cycle']
-                        imu_label = self.imu_labels[ball_name]
-                        imu_label.config(
-                            text=f"{ball_name} - Yaw: {yaw}, Pitch: {ball.pitch}, Roll: {ball.roll}\n"
-                                 f"\tSpeed: {ball.speed}, Accel: {ball.acceleration}, Duty: {ball.duty_cycle}"
-                        )
-                    except KeyError:
-                        logging.warning("[GUI] Legacy state update received, missing values.")
-
                 logging.info(
                     f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, yaw={ball.rotation},"
-                    f" pitch={ball.pitch}, roll={ball.roll}, {ball.cur_action}, speed={ball.speed},"
+                    f" pitch={ball.pitch}, roll={ball.roll}, {ball.action}, {ball.objective}, speed={ball.speed},"
                     f" acceleration={ball.acceleration}, duty_cycle={ball.duty_cycle}")
                 return
 
@@ -655,7 +653,7 @@ class ControlPanel:
         If no ball is selected, a warning will be logged.
         :return: None
         """
-        self.single_movement_action(ActionType.TURN_LEFT)
+        self.single_movement_objective(ObjectiveType.TURN_LEFT)
 
     def turn_right(self):
         """
@@ -663,7 +661,7 @@ class ControlPanel:
         If no ball is selected, a warning will be logged.
         :return: None
         """
-        self.single_movement_action(ActionType.TURN_RIGHT)
+        self.single_movement_objective(ObjectiveType.TURN_RIGHT)
 
     def move_forward(self):
         """
@@ -671,7 +669,7 @@ class ControlPanel:
         If no ball is selected, a warning will be logged.
         :return: None
         """
-        self.single_movement_action(ActionType.FORWARD)
+        self.single_movement_objective(ObjectiveType.FORWARD)
 
     def move_backward(self):
         """
@@ -679,12 +677,12 @@ class ControlPanel:
         If no ball is selected, a warning will be logged.
         :return: None
         """
-        self.single_movement_action(ActionType.BACKWARD)
+        self.single_movement_objective(ObjectiveType.BACKWARD)
 
-    def single_movement_action(self, action_type):
+    def single_movement_objective(self, objective_type):
         """
-        Performs a single movement action. If the ball has a target location, a warning will be logged.
-        :param action_type: The action type
+        Performs a single movement objective. If the ball has a target location, a warning will be logged.
+        :param objective_type: The objective type
         :return: None
         """
         if self.selected_ball:
@@ -693,7 +691,7 @@ class ControlPanel:
                 return
             max_duty_cycle = self.max_duty_cycle_value.get()
             data = {'max_duty_cycle': max_duty_cycle}
-            self.selected_ball.action(action_type, self.mqtt_connector, data)
+            self.selected_ball.objective(objective_type, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 
@@ -705,7 +703,7 @@ class ControlPanel:
         """
         if self.selected_ball:
             data['max_duty_cycle'] = self.max_duty_cycle_value.get()
-            self.selected_ball.action(ActionType.MOVETO, self.mqtt_connector, data)
+            self.selected_ball.objective(ObjectiveType.MOVETO, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 
@@ -716,7 +714,7 @@ class ControlPanel:
         :return: None
         """
         if self.selected_ball:
-            self.selected_ball.action(ActionType.INIT, self.mqtt_connector, data)
+            self.selected_ball.objective(ObjectiveType.INIT, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 
@@ -736,7 +734,7 @@ class ControlPanel:
         :return: None
         """
         if self.selected_ball:
-            self.selected_ball.action(ActionType.REBOOT, self.mqtt_connector)
+            self.selected_ball.objective(ObjectiveType.REBOOT, self.mqtt_connector)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 
@@ -785,7 +783,7 @@ class ControlPanel:
         :return: None
         """
         if self.selected_ball:
-            self.selected_ball.action(ActionType.STOP, self.mqtt_connector)
+            self.selected_ball.objective(ObjectiveType.STOP, self.mqtt_connector)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 

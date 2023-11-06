@@ -1,6 +1,6 @@
 #include "state_machine.h"
 
-volatile State current_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ACTION_INIT};
+volatile State current_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ACTION_NONE, OBJECTIVE_INIT};
 volatile Target target = {0.0, 0.0, 0.0};
 
 void set_current_coordinates(float x, float y) {
@@ -80,6 +80,17 @@ void set_current_action(int action) {
      * @return void
     */
     current_state.action = action;
+}
+
+void set_current_objective(int objective) {
+    /**
+     * Set the current objective
+     * 
+     * @param objective The current objective
+     * 
+     * @return void
+    */
+    current_state.objective = objective;
 }
 
 void set_current_acceleration(float acceleration) {
@@ -189,6 +200,15 @@ int get_current_action() {
     return current_state.action;
 }
 
+int get_current_objective() {
+    /**
+     * Get the current objective
+     * 
+     * @return The current objective
+    */
+    return current_state.objective;
+}
+
 float get_current_duty_cycle() {
     /**
      * Get the current duty cycle
@@ -254,16 +274,16 @@ void report_state_task(void *args) {
     esp_mqtt_client_handle_t* mqtt_client = (esp_mqtt_client_handle_t*)args;
 
     while (1) {
-        if (current_state.action != ACTION_INIT) {
+        if (current_state.objective != OBJECTIVE_INIT) {
 
-            int max_length = snprintf(NULL, 0, "%f %f %f %d %f %f %f %f %f",
+            int max_length = snprintf(NULL, 0, "%f %f %f %d %f %f %f %f %f %d",
              current_state.x, current_state.y, current_state.rotation, current_state.action, current_state.roll,
-              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle);
+              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle, current_state.objective);
 
             char message[max_length + 1]; 
-            snprintf(message, max_length + 1, "%f %f %f %d %f %f %f %f %f",
+            snprintf(message, max_length + 1, "%f %f %f %d %f %f %f %f %f %d",
              current_state.x, current_state.y, current_state.rotation, current_state.action, current_state.roll,
-              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle);
+              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle, current_state.objective);
 
             mqtt_publish_message(*mqtt_client, message);
 

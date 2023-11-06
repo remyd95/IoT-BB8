@@ -1,5 +1,5 @@
 from devices.action_type import ActionType
-
+from devices.objective_type import ObjectiveType
 
 class Ball:
     """
@@ -16,7 +16,8 @@ class Ball:
         self.name = "ball" + str(ball_id)
 
         # Internal state
-        self.cur_action = None
+        self.action = None
+        self.objective = None
         self.max_duty_cycle = 100
         self.duty_cycle = None
         self.x_pos = None
@@ -35,7 +36,7 @@ class Ball:
         self.target_y_pos = None
 
         # MQTT data
-        self.topic = self.name + "/action"
+        self.topic = self.name + "/objective"
 
         # GUI data
         self.position_label = None
@@ -75,27 +76,27 @@ class Ball:
         """
         self.position_label = position_label
 
-    def action(self, action_type, mqtt_connector, data=None):
+    def objective(self, objective_type, mqtt_connector, data=None):
         """
-        Performs the given action on the ball. The action is performed by sending a message to the ball.
-        :param action_type: The action type.
+        Performs the given objective on the ball. The objective is performed by sending a message to the ball.
+        :param objective_type: The objective type.
         :param mqtt_connector: The MQTT connector.
         :param data: The data to send to the ball.
         :return: None
         """
-        if action_type == ActionType.FORWARD:
+        if objective_type == ObjectiveType.FORWARD:
             mqtt_connector.publish(self.topic, f"FW {float(data['max_duty_cycle'])}")
-        elif action_type == ActionType.BACKWARD:
+        elif objective_type == ObjectiveType.BACKWARD:
             mqtt_connector.publish(self.topic, f"BW {float(data['max_duty_cycle'])}")
-        elif action_type == ActionType.TURN_LEFT:
+        elif objective_type == ObjectiveType.TURN_LEFT:
             mqtt_connector.publish(self.topic, f"TL {float(data['max_duty_cycle'])}")
-        elif action_type == ActionType.TURN_RIGHT:
+        elif objective_type == ObjectiveType.TURN_RIGHT:
             mqtt_connector.publish(self.topic, f"TR {float(data['max_duty_cycle'])}")
-        elif action_type == ActionType.STOP:
+        elif objective_type == ObjectiveType.STOP:
             mqtt_connector.publish(self.topic, "ST")
-        elif action_type == ActionType.REBOOT:
+        elif objective_type == ObjectiveType.MOVETO:
+            mqtt_connector.publish(self.topic, f"MT {data['x']} {data['y']} {float(data['max_duty_cycle'])}")
+        elif objective_type == ObjectiveType.REBOOT:
             mqtt_connector.publish(self.topic, "RB")
-        elif action_type == ActionType.MOVETO:
-            mqtt_connector.publish(self.topic, f"MV {data['x']} {data['y']} {float(data['max_duty_cycle'])}")
-        elif action_type == ActionType.INIT:
+        elif objective_type == ObjectiveType.INIT:
             mqtt_connector.publish(self.topic, f"IN {data['x']} {data['y']}")

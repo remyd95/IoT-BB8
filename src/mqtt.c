@@ -1,5 +1,5 @@
 #include "mqtt.h"
-#include "action_handler.h"
+#include "objective_handler.h"
 
 #include <stdio.h>
 #include <esp_log.h>
@@ -10,7 +10,7 @@ const int MQTT_CONNECTED_BIT = BIT1;
 
 char BALL_ID[8];
 char BALL_NAME[12];
-char ACTION_TOPIC[30];
+char OBJECTIVE_TOPIC[30];
 char STATE_TOPIC[30];
 char ID_TOPIC[2] = "id";
 
@@ -50,16 +50,16 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             // Register ball to base station
             esp_mqtt_client_publish(client, "register", BALL_ID, 0, 0, 0);
 
-            if (ACTION_TOPIC[0] == 0) {
-                snprintf(ACTION_TOPIC, sizeof(ACTION_TOPIC), "%s/action", BALL_NAME); 
+            if (OBJECTIVE_TOPIC[0] == 0) {
+                snprintf(OBJECTIVE_TOPIC, sizeof(OBJECTIVE_TOPIC), "%s/objective", BALL_NAME); 
             }
 
             if (STATE_TOPIC[0] == 0) {
                 snprintf(STATE_TOPIC, sizeof(STATE_TOPIC), "%s/state", BALL_NAME); 
             }
 
-           // Subscribe to the "ball<ID>/action" topic
-            esp_mqtt_client_subscribe(client, ACTION_TOPIC, 0);
+           // Subscribe to the "ball<ID>/objective" topic
+            esp_mqtt_client_subscribe(client, OBJECTIVE_TOPIC, 0);
             esp_mqtt_client_subscribe(client, ID_TOPIC, 0);
 
             xEventGroupSetBits(connection_event_group, MQTT_CONNECTED_BIT);
@@ -77,8 +77,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
 
-            if (strncmp(event->topic, ACTION_TOPIC, strlen(MQTT_TAG)) == 0) {
-                process_action(event->data);
+            if (strncmp(event->topic, OBJECTIVE_TOPIC, strlen(MQTT_TAG)) == 0) {
+                process_objective_message(event->data);
             } else if (strncmp(event->topic, ID_TOPIC, 2) == 0) {
                 identify_ball(client, event->data);
             }
@@ -131,7 +131,7 @@ void init_mqtt(EventGroupHandle_t *connection_event_group, esp_mqtt_client_handl
     // Initialze mqtt ball identifiers
     BALL_ID[0] = 0;
     BALL_NAME[0] = 0;
-    ACTION_TOPIC[0] = 0;
+    OBJECTIVE_TOPIC[0] = 0;
     STATE_TOPIC[0] = 0;
 
     mqtt_data.connection_event_group = connection_event_group;
