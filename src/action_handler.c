@@ -95,6 +95,7 @@ void process_objective(State state, Target target, int previous_objective) {
 
         // If we are close enough to the target, stop
         if (distance_to_target < TARGET_OFFSET) {
+            printf("Close enough to target!\n");
             if (state.action == ACTION_NONE) {
                 set_current_objective(OBJECTIVE_NONE);
             } else {
@@ -107,18 +108,21 @@ void process_objective(State state, Target target, int previous_objective) {
         float angle_to_target = atan2(target.y - state.y, target.x - state.x) * (180.0 / M_PI);
 
         // Calculate the angle difference
-        //      - Negative angle difference means turn left
-        //      - Positive angle difference means turn right
+        //      - Negative angle difference means turn right
+        //      - Positive angle difference means turn left
         float angle_difference = calculate_angle_difference(angle_to_target, state.rotation);
+        printf("The angle difference is: %f\n", angle_difference);
         float angle_difference_abs = fabs(angle_difference);
         
         // Rotate until the angle difference is small enough
         if (angle_difference_abs > ANGLE_OFFSET) {
             if (angle_difference > 0.0) {
-                set_current_action(ACTION_TURN_RIGHT);
+                printf("We need to turn left!\n");
+                set_current_action(ACTION_TURN_LEFT);
                 return;
             } else {
-                set_current_action(ACTION_TURN_LEFT);
+                printf("We need to turn right!\n");
+                set_current_action(ACTION_TURN_RIGHT);
                 return;
             }
         } else {
@@ -127,6 +131,7 @@ void process_objective(State state, Target target, int previous_objective) {
                 return;
             }
             
+            printf("We need to move forward!\n");
             // Angle to small enough the move forward!
             set_current_action(ACTION_FORWARD);
             return;
@@ -167,7 +172,7 @@ float calculate_angle_difference(float angle_to_target, float yaw) {
     return angle_difference;
 }
 
-void process_action(State state, Target target) {
+void process_action(State state, Target target, TickType_t* last_turn_pulse) {
     /**
      * Process the action based on the current state and target
      * Actions are the simplest form of movement, e.g. forward, backward, turn left, turn right
@@ -193,11 +198,11 @@ void process_action(State state, Target target) {
         return;
     }
     else if (state.action == ACTION_TURN_LEFT) {
-        turn_left_action(state);
+        turn_left_action(state, last_turn_pulse);
         return;
     }
     else if (state.action == ACTION_TURN_RIGHT) {
-        turn_right_action(state);
+        turn_right_action(state, last_turn_pulse);
         return;
     }
     return;
@@ -295,7 +300,7 @@ void backward_action(State state, Target target) {
     return;
 }
 
-void turn_left_action(State state) {
+void turn_left_action(State state, TickType_t* last_turn_pulse) {
     /**
      * Turn left
      * 
@@ -304,31 +309,66 @@ void turn_left_action(State state) {
      * 
      * @return void
     */
-    motor_action_data_t motor_action_data_left;
-    motor_action_data_t motor_action_data_right;
 
-    float adjusted_duty_cycle = current_state.duty_cycle;
+    // Check if we have waited long enough since the last turn pulse
+    if ((xTaskGetTickCount() - *last_turn_pulse) < (TURN_INTERVAL_MS+TURN_PULSE_MS) / portTICK_PERIOD_MS) {
+        printf("We are waiting to turn left!\n");
+        if ((xTaskGetTickCount() - *last_turn_pulse) > TURN_INTERVAL_MS / portTICK_PERIOD_MS) {
+            printf("We are turning left!\n");
+            motor_action_data_t motor_action_data_left;
+            motor_action_data_t motor_action_data_right;
 
-    if (current_state.duty_cycle < TURN_DUTY_CYCLE - TURN_STEP_SIZE) {
-        adjusted_duty_cycle += TURN_STEP_SIZE;
+            float adjusted_duty_cycle = current_state.duty_cycle;
+
+            if (current_state.duty_cycle < TURN_DUTY_CYCLE - TURN_STEP_SIZE) {
+                adjusted_duty_cycle += TURN_STEP_SIZE;
+            } else {
+                adjusted_duty_cycle = TURN_DUTY_CYCLE;
+            }
+
+            motor_action_data_left.duty_cycle_left = adjusted_duty_cycle;
+            motor_action_data_left.duty_cycle_right = adjusted_duty_cycle;
+            motor_action_data_right.duty_cycle_left = adjusted_duty_cycle;
+            motor_action_data_right.duty_cycle_right = adjusted_duty_cycle;
+
+            motor_action_data_left.motor_id = MOTOR_LEFT;
+            pwm_backward_action(motor_action_data_left);
+            motor_action_data_right.motor_id = MOTOR_RIGHT;
+            pwm_forward_action(motor_action_data_right);
+
+            set_current_duty_cycle(adjusted_duty_cycle);
+            return;
+        }
+        return;
     } else {
-        adjusted_duty_cycle = TURN_DUTY_CYCLE;
+        motor_action_data_t motor_action_data;
+        motor_action_data.motor_id = MOTOR_ALL;
+
+        // Check safely if duty cycle is float 0
+        if (state.duty_cycle < EPSILON) {
+            pwm_stop_action(motor_action_data);
+            return;
+        }
+
+        float adjusted_duty_cycle = state.duty_cycle;
+
+        if (state.duty_cycle > EPSILON + BRAKE_STEP_SIZE) {
+            adjusted_duty_cycle -= BRAKE_STEP_SIZE;
+        } else {
+            adjusted_duty_cycle = 0.0f;
+        }
+
+        motor_action_data.duty_cycle_left = adjusted_duty_cycle;
+        motor_action_data.duty_cycle_right = adjusted_duty_cycle;
+        pwm_forward_action(motor_action_data);
+        set_current_duty_cycle(adjusted_duty_cycle);
+
+        *last_turn_pulse = xTaskGetTickCount();
+        return;
     }
-
-    motor_action_data_left.duty_cycle_left = adjusted_duty_cycle;
-    motor_action_data_left.duty_cycle_right = adjusted_duty_cycle;
-    motor_action_data_right.duty_cycle_left = adjusted_duty_cycle;
-    motor_action_data_right.duty_cycle_right = adjusted_duty_cycle;
-
-    motor_action_data_left.motor_id = MOTOR_LEFT;
-    pwm_backward_action(motor_action_data_left);
-    motor_action_data_right.motor_id = MOTOR_RIGHT;
-    pwm_forward_action(motor_action_data_right);
-
-    set_current_duty_cycle(adjusted_duty_cycle);
 }
 
-void turn_right_action(State state) {
+void turn_right_action(State state, TickType_t* last_turn_pulse) {
     /**
      * Turn right
      * 
@@ -337,26 +377,59 @@ void turn_right_action(State state) {
      * 
      * @return void
     */
-    motor_action_data_t motor_action_data_left;
-    motor_action_data_t motor_action_data_right;
+    if ((xTaskGetTickCount() - *last_turn_pulse) < (TURN_INTERVAL_MS+TURN_PULSE_MS) / portTICK_PERIOD_MS) {
+        printf("We are waiting to turn right!\n");
+        if ((xTaskGetTickCount() - *last_turn_pulse) > TURN_INTERVAL_MS / portTICK_PERIOD_MS) {
+            printf("We are turning right!\n");
+            motor_action_data_t motor_action_data_left;
+            motor_action_data_t motor_action_data_right;
 
-    float adjusted_duty_cycle = current_state.duty_cycle;
+            float adjusted_duty_cycle = current_state.duty_cycle;
 
-    if (current_state.duty_cycle < TURN_DUTY_CYCLE - TURN_STEP_SIZE) {
-        adjusted_duty_cycle += TURN_STEP_SIZE;
+            if (current_state.duty_cycle < TURN_DUTY_CYCLE - TURN_STEP_SIZE) {
+                adjusted_duty_cycle += TURN_STEP_SIZE;
+            } else {
+                adjusted_duty_cycle = TURN_DUTY_CYCLE;
+            }
+
+            motor_action_data_left.duty_cycle_left = adjusted_duty_cycle;
+            motor_action_data_left.duty_cycle_right = adjusted_duty_cycle;
+            motor_action_data_right.duty_cycle_left = adjusted_duty_cycle;
+            motor_action_data_right.duty_cycle_right = adjusted_duty_cycle;
+
+            motor_action_data_left.motor_id = MOTOR_LEFT;
+            pwm_forward_action(motor_action_data_left);
+            motor_action_data_right.motor_id = MOTOR_RIGHT;
+            pwm_backward_action(motor_action_data_right);
+
+            set_current_duty_cycle(adjusted_duty_cycle);
+            return;
+        }
+        return;
     } else {
-        adjusted_duty_cycle = TURN_DUTY_CYCLE;
+        motor_action_data_t motor_action_data;
+        motor_action_data.motor_id = MOTOR_ALL;
+
+        // Check safely if duty cycle is float 0
+        if (state.duty_cycle < EPSILON) {
+            pwm_stop_action(motor_action_data);
+            return;
+        }
+
+        float adjusted_duty_cycle = state.duty_cycle;
+
+        if (state.duty_cycle > EPSILON + BRAKE_STEP_SIZE) {
+            adjusted_duty_cycle -= BRAKE_STEP_SIZE;
+        } else {
+            adjusted_duty_cycle = 0.0f;
+        }
+
+        motor_action_data.duty_cycle_left = adjusted_duty_cycle;
+        motor_action_data.duty_cycle_right = adjusted_duty_cycle;
+        pwm_forward_action(motor_action_data);
+        set_current_duty_cycle(adjusted_duty_cycle);
+
+        *last_turn_pulse = xTaskGetTickCount();
+        return;
     }
-
-    motor_action_data_left.duty_cycle_left = adjusted_duty_cycle;
-    motor_action_data_left.duty_cycle_right = adjusted_duty_cycle;
-    motor_action_data_right.duty_cycle_left = adjusted_duty_cycle;
-    motor_action_data_right.duty_cycle_right = adjusted_duty_cycle;
-
-    motor_action_data_left.motor_id = MOTOR_LEFT;
-    pwm_forward_action(motor_action_data_left);
-    motor_action_data_right.motor_id = MOTOR_RIGHT;
-    pwm_backward_action(motor_action_data_right);
-
-    set_current_duty_cycle(adjusted_duty_cycle);
 }

@@ -691,7 +691,7 @@ class ControlPanel:
                 return
             max_duty_cycle = self.max_duty_cycle_value.get()
             data = {'max_duty_cycle': max_duty_cycle}
-            self.selected_ball.objective(objective_type, self.mqtt_connector, data)
+            self.selected_ball.set_objective(objective_type, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 
@@ -703,7 +703,7 @@ class ControlPanel:
         """
         if self.selected_ball:
             data['max_duty_cycle'] = self.max_duty_cycle_value.get()
-            self.selected_ball.objective(ObjectiveType.MOVETO, self.mqtt_connector, data)
+            self.selected_ball.set_objective(ObjectiveType.MOVETO, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 
@@ -714,7 +714,9 @@ class ControlPanel:
         :return: None
         """
         if self.selected_ball:
-            self.selected_ball.objective(ObjectiveType.INIT, self.mqtt_connector, data)
+            print(data)
+            print(self.selected_ball.name)
+            self.selected_ball.set_objective(ObjectiveType.INIT, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 
@@ -734,7 +736,7 @@ class ControlPanel:
         :return: None
         """
         if self.selected_ball:
-            self.selected_ball.objective(ObjectiveType.REBOOT, self.mqtt_connector)
+            self.selected_ball.set_objective(ObjectiveType.REBOOT, self.mqtt_connector)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 
@@ -783,7 +785,7 @@ class ControlPanel:
         :return: None
         """
         if self.selected_ball:
-            self.selected_ball.objective(ObjectiveType.STOP, self.mqtt_connector)
+            self.selected_ball.set_objective(ObjectiveType.STOP, self.mqtt_connector)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
 

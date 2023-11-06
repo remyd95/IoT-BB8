@@ -76,7 +76,7 @@ class Ball:
         """
         self.position_label = position_label
 
-    def objective(self, objective_type, mqtt_connector, data=None):
+    def set_objective(self, objective_type, mqtt_connector, data=None):
         """
         Performs the given objective on the ball. The objective is performed by sending a message to the ball.
         :param objective_type: The objective type.

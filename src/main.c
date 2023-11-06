@@ -81,7 +81,7 @@ void test_connection_task(void *args) {
             gpio_set_level(LED_PIN, 0);
 
             // Stop the motors when WiFi is disconnected
-            set_current_objective(OBJECTIVE_STOP);
+            //set_current_objective(OBJECTIVE_STOP);
         }
 
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -110,6 +110,7 @@ void app_main() {
     xTaskCreate(test_connection_task, "test_connection_task", 4096, NULL, 10, NULL);
 
     TickType_t last_wakeup_time = xTaskGetTickCount(); 
+    TickType_t last_turn_pulse = xTaskGetTickCount(); 
 
     int previous_objective = OBJECTIVE_UNDEFINED;
 
@@ -124,7 +125,7 @@ void app_main() {
         process_objective(current_state, target, previous_objective);
 
         // Process the action to determine the next state
-        process_action(current_state, target);
+        process_action(current_state, target, &last_turn_pulse);
 
         // Update the current state after processing the objective and action
         if (current_state.objective != OBJECTIVE_INIT) {
