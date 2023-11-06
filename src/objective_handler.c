@@ -4,8 +4,6 @@
 
 #include <math.h>
 #include <string.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 
 
 void process_objective_message(char* event_data) {

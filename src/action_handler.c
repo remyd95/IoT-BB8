@@ -78,6 +78,11 @@ void process_objective(State state, Target target, int previous_objective) {
         return;
     }  
 
+    if (state.objective == OBJECTIVE_REBOOT) {
+        //set_current_objective(OBJECTIVE_INIT); Might not be needed
+        esp_restart();
+    }
+
     if (state.objective == OBJECTIVE_MOVETO) {
 
         // Wait with processing until the previous action is terminated
@@ -102,28 +107,30 @@ void process_objective(State state, Target target, int previous_objective) {
         float angle_to_target = atan2(target.y - state.y, target.x - state.x) * (180.0 / M_PI);
 
         // Calculate the angle difference
-        //  Negative angle difference means turn right
-        //  Positive angle difference means turn left
+        //      - Negative angle difference means turn left
+        //      - Positive angle difference means turn right
         float angle_difference = calculate_angle_difference(angle_to_target, state.rotation);
         float angle_difference_abs = fabs(angle_difference);
         
-        // TODO: Rotate to target if angle difference is large enough
-        if (angle_difference_abs > 10.0) {
+        // Rotate until the angle difference is small enough
+        if (angle_difference_abs > ANGLE_OFFSET) {
             if (angle_difference > 0.0) {
-                printf("TURN RIGHT\n");
+                set_current_action(ACTION_TURN_RIGHT);
+                return;
             } else {
-                printf("TURN LEFT\n");
+                set_current_action(ACTION_TURN_LEFT);
+                return;
             }
-        } else if (distance_to_target > TARGET_OFFSET) {
-            printf("MOVE FORWARD\n");
         } else {
-            printf("STOP\n");
+            if (state.action == ACTION_TURN_LEFT || state.action == ACTION_TURN_RIGHT) {
+                set_current_action(ACTION_STOP);
+                return;
+            }
+            
+            // Angle to small enough the move forward!
+            set_current_action(ACTION_FORWARD);
+            return;
         }
-        
-        // TODO: If angle difference is small enough, move forward to target
-
-        // TODO: If distance to target is small enough, stop
-
         return;
     }
     return;
@@ -186,11 +193,11 @@ void process_action(State state, Target target) {
         return;
     }
     else if (state.action == ACTION_TURN_LEFT) {
-        turn_left_action(state, target);
+        turn_left_action(state);
         return;
     }
     else if (state.action == ACTION_TURN_RIGHT) {
-        turn_right_action(state, target);
+        turn_right_action(state);
         return;
     }
     return;
@@ -288,7 +295,7 @@ void backward_action(State state, Target target) {
     return;
 }
 
-void turn_left_action(State state, Target target) {
+void turn_left_action(State state) {
     /**
      * Turn left
      * 
@@ -302,10 +309,10 @@ void turn_left_action(State state, Target target) {
 
     float adjusted_duty_cycle = current_state.duty_cycle;
 
-    if (current_state.duty_cycle < target.duty_cycle - TURN_STEP_SIZE) {
+    if (current_state.duty_cycle < TURN_DUTY_CYCLE - TURN_STEP_SIZE) {
         adjusted_duty_cycle += TURN_STEP_SIZE;
     } else {
-        adjusted_duty_cycle = target.duty_cycle;
+        adjusted_duty_cycle = TURN_DUTY_CYCLE;
     }
 
     motor_action_data_left.duty_cycle_left = adjusted_duty_cycle;
@@ -321,7 +328,7 @@ void turn_left_action(State state, Target target) {
     set_current_duty_cycle(adjusted_duty_cycle);
 }
 
-void turn_right_action(State state, Target target) {
+void turn_right_action(State state) {
     /**
      * Turn right
      * 
@@ -335,10 +342,10 @@ void turn_right_action(State state, Target target) {
 
     float adjusted_duty_cycle = current_state.duty_cycle;
 
-    if (current_state.duty_cycle < target.duty_cycle - TURN_STEP_SIZE) {
+    if (current_state.duty_cycle < TURN_DUTY_CYCLE - TURN_STEP_SIZE) {
         adjusted_duty_cycle += TURN_STEP_SIZE;
     } else {
-        adjusted_duty_cycle = target.duty_cycle;
+        adjusted_duty_cycle = TURN_DUTY_CYCLE;
     }
 
     motor_action_data_left.duty_cycle_left = adjusted_duty_cycle;
