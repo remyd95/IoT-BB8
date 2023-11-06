@@ -95,7 +95,6 @@ void process_objective(State state, Target target, int previous_objective) {
 
         // If we are close enough to the target, stop
         if (distance_to_target < TARGET_OFFSET) {
-            //printf("Close enough to target!\n");
             if (state.action == ACTION_NONE) {
                 set_current_objective(OBJECTIVE_NONE);
             } else {
@@ -111,17 +110,18 @@ void process_objective(State state, Target target, int previous_objective) {
         //      - Negative angle difference means turn right
         //      - Positive angle difference means turn left
         float angle_difference = calculate_angle_difference(angle_to_target, state.rotation);
-        //printf("The angle difference is: %f\n", angle_difference);
         float angle_difference_abs = fabs(angle_difference);
         
         // Rotate until the angle difference is small enough
         if (angle_difference_abs > ANGLE_OFFSET) {
+            if (state.action == ACTION_FORWARD) {
+                set_current_action(ACTION_STOP);
+                return;
+            }
             if (angle_difference > 0.0) {
-                //printf("We need to turn left!\n");
                 set_current_action(ACTION_TURN_LEFT);
                 return;
             } else {
-                //printf("We need to turn right!\n");
                 set_current_action(ACTION_TURN_RIGHT);
                 return;
             }
@@ -131,7 +131,6 @@ void process_objective(State state, Target target, int previous_objective) {
                 return;
             }
             
-            //printf("We need to move forward!\n");
             // Angle to small enough the move forward!
             set_current_action(ACTION_FORWARD);
             return;

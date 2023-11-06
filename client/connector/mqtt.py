@@ -176,7 +176,7 @@ class MQTTClient:
         for ball_name in inactive_balls:
             del self.last_state_update[ball_name]
             if self.deregister_handler(ball_name):
-                logging.info(f"[MQTT] Removing {ball_name} due to timeout (60s)")
+                logging.info(f"[MQTT] Removing {ball_name} due to timeout ({TIMEOUT_MS})")
 
     def start_inactive_ball_checker(self):
         """

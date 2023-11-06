@@ -2,7 +2,7 @@
 
 // calibration data, replace with offsets from calibration mode
 calibration_t cal = {
-    .mag_offset = {.x = -14.390625, .y = 26.468750, .z = -12.181641},
+    .mag_offset = {.x = -8.394531, .y = 4.224609, .z = 19.142578},
     .mag_scale = {.x = 1.011759, .y = 1.016019, .z = 0.973342},
     .accel_offset = {.x = 0.021837, .y = 0.043132, .z = -0.144693},
     .accel_scale_lo = {.x = 1.011026, .y = 1.013828, .z = 0.974942},
@@ -86,9 +86,9 @@ static void run_imu(imu_data_t *imu_data) {
     transform_mag(&vm);
 
     // Apply the AHRS algorithm
-    ahrs_update(DEG2RAD(vg.x), DEG2RAD(vg.y), DEG2RAD(vg.z),
+    ahrs_update(0.5*DEG2RAD(vg.x), 0.5*DEG2RAD(vg.y), 0.5*DEG2RAD(vg.z),
                 va.x, va.y, va.z,
-                vm.x, vm.y, vm.z);
+                0.0f, 0.0f, 0.0f);
 
     float temp;
     ESP_ERROR_CHECK(get_temperature_celsius(&temp));
