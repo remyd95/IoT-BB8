@@ -85,40 +85,27 @@ void process_objective(State state, Target target, int previous_objective) {
             return;
         }
 
-        float target_x = target.x;
-        float target_y = target.y;
+        // Get the distance to the target
+        float distance_to_target = sqrt(pow(target.x - state.x, 2) + pow(target.y - state.y, 2));
 
-        float current_x = get_current_x_pos();
-        float current_y = get_current_y_pos();
-
-        float current_yaw = get_current_rotation();
-        float current_duty_cycle = get_current_duty_cycle();
-
-        float distance_to_target = sqrt(pow(target_x - current_x, 2) + pow(target_y - current_y, 2));
-        float angle_to_target = atan2(target_y - current_y, target_x - current_x) * (180.0 / M_PI);
-
-        // Align angle to axis where 0 degrees is straight ahead
-        angle_to_target = angle_to_target - 90.0;
-
-        if (angle_to_target < 0.0) {
-            angle_to_target += 360.0;
+        // If we are close enough to the target, stop
+        if (distance_to_target < TARGET_OFFSET) {
+            if (state.action == ACTION_NONE) {
+                set_current_objective(OBJECTIVE_NONE);
+            } else {
+                set_current_action(ACTION_STOP);
+            }
+            return;
         }
 
-        angle_to_target = fabs(angle_to_target - 360.0);
-    
-        printf("Angle to target: %f\n", angle_to_target);
-        float angle_difference = current_yaw - angle_to_target;
+        // Get the angle to the target
+        float angle_to_target = atan2(target.y - state.y, target.x - state.x) * (180.0 / M_PI);
 
-        if (angle_difference > 180.0) {
-            angle_difference -= 360.0;
-        } else if (angle_difference < -180.0) {
-            angle_difference += 360.0;
-        }
-
+        // Calculate the angle difference
+        //  Negative angle difference means turn right
+        //  Positive angle difference means turn left
+        float angle_difference = calculate_angle_difference(angle_to_target, state.rotation);
         float angle_difference_abs = fabs(angle_difference);
-
-        printf("DISTANCE TARGET= %f\n", distance_to_target);
-        printf("ANGLE DIFFERENCE= %f\n", angle_difference);
         
         // TODO: Rotate to target if angle difference is large enough
         if (angle_difference_abs > 10.0) {
@@ -140,6 +127,37 @@ void process_objective(State state, Target target, int previous_objective) {
         return;
     }
     return;
+}
+
+float calculate_angle_difference(float angle_to_target, float yaw) {
+    /**
+     * Calculate the difference between two angles in cartesian plane
+     * Assume that 0 degrees is straight ahead for the yaw
+     * Assume that 0 degrees is right for the angle_to_target
+     * 
+     * @param angle_to_target The first angle
+     * @param yaw The second angle
+     * 
+     * @return The difference between the two angles
+    */
+
+    float corrected_angle_to_target = angle_to_target - 90.0;
+
+    if (corrected_angle_to_target < 0.0) {
+        corrected_angle_to_target += 360.0;
+    }
+
+    corrected_angle_to_target = fabs(corrected_angle_to_target - 360.0);
+
+    float angle_difference = yaw - corrected_angle_to_target;
+
+    if (angle_difference > 180.0) {
+        angle_difference -= 360.0;
+    } else if (angle_difference < -180.0) {
+        angle_difference += 360.0;
+    }
+
+    return angle_difference;
 }
 
 void process_action(State state, Target target) {

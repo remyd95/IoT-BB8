@@ -11,7 +11,7 @@
 #define DECISION_INTERVAL_TIME_MS 50
 #define TURN_PULSE_MS 20
 
-#define TARGET_OFFSET 10
+#define TARGET_OFFSET 20
 
 // Define really small number
 #define EPSILON 0.001
@@ -20,6 +20,9 @@
 int process_objective_switch(int previous_objective, int current_objective);
 void process_objective(State state, Target target, int previous_objective);
 void process_action(State state, Target target);
+
+// Helper functions
+float calculate_angle_difference(float angle_to_target, float yaw);
 
 // Action functions
 void stop_action(State state);
