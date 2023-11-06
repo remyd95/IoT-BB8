@@ -95,7 +95,7 @@ void process_objective(State state, Target target, int previous_objective) {
 
         // If we are close enough to the target, stop
         if (distance_to_target < TARGET_OFFSET) {
-            printf("Close enough to target!\n");
+            //printf("Close enough to target!\n");
             if (state.action == ACTION_NONE) {
                 set_current_objective(OBJECTIVE_NONE);
             } else {
@@ -111,17 +111,17 @@ void process_objective(State state, Target target, int previous_objective) {
         //      - Negative angle difference means turn right
         //      - Positive angle difference means turn left
         float angle_difference = calculate_angle_difference(angle_to_target, state.rotation);
-        printf("The angle difference is: %f\n", angle_difference);
+        //printf("The angle difference is: %f\n", angle_difference);
         float angle_difference_abs = fabs(angle_difference);
         
         // Rotate until the angle difference is small enough
         if (angle_difference_abs > ANGLE_OFFSET) {
             if (angle_difference > 0.0) {
-                printf("We need to turn left!\n");
+                //printf("We need to turn left!\n");
                 set_current_action(ACTION_TURN_LEFT);
                 return;
             } else {
-                printf("We need to turn right!\n");
+                //printf("We need to turn right!\n");
                 set_current_action(ACTION_TURN_RIGHT);
                 return;
             }
@@ -131,7 +131,7 @@ void process_objective(State state, Target target, int previous_objective) {
                 return;
             }
             
-            printf("We need to move forward!\n");
+            //printf("We need to move forward!\n");
             // Angle to small enough the move forward!
             set_current_action(ACTION_FORWARD);
             return;
@@ -312,9 +312,7 @@ void turn_left_action(State state, TickType_t* last_turn_pulse) {
 
     // Check if we have waited long enough since the last turn pulse
     if ((xTaskGetTickCount() - *last_turn_pulse) < (TURN_INTERVAL_MS+TURN_PULSE_MS) / portTICK_PERIOD_MS) {
-        printf("We are waiting to turn left!\n");
         if ((xTaskGetTickCount() - *last_turn_pulse) > TURN_INTERVAL_MS / portTICK_PERIOD_MS) {
-            printf("We are turning left!\n");
             motor_action_data_t motor_action_data_left;
             motor_action_data_t motor_action_data_right;
 
@@ -341,6 +339,9 @@ void turn_left_action(State state, TickType_t* last_turn_pulse) {
         }
         return;
     } else {
+        // set the value of last turn pulse to the current tick count
+        *last_turn_pulse = xTaskGetTickCount();
+
         motor_action_data_t motor_action_data;
         motor_action_data.motor_id = MOTOR_ALL;
 
@@ -363,7 +364,6 @@ void turn_left_action(State state, TickType_t* last_turn_pulse) {
         pwm_forward_action(motor_action_data);
         set_current_duty_cycle(adjusted_duty_cycle);
 
-        *last_turn_pulse = xTaskGetTickCount();
         return;
     }
 }
@@ -378,16 +378,14 @@ void turn_right_action(State state, TickType_t* last_turn_pulse) {
      * @return void
     */
     if ((xTaskGetTickCount() - *last_turn_pulse) < (TURN_INTERVAL_MS+TURN_PULSE_MS) / portTICK_PERIOD_MS) {
-        printf("We are waiting to turn right!\n");
         if ((xTaskGetTickCount() - *last_turn_pulse) > TURN_INTERVAL_MS / portTICK_PERIOD_MS) {
-            printf("We are turning right!\n");
             motor_action_data_t motor_action_data_left;
             motor_action_data_t motor_action_data_right;
 
             float adjusted_duty_cycle = current_state.duty_cycle;
 
-            if (current_state.duty_cycle < TURN_DUTY_CYCLE - TURN_STEP_SIZE) {
-                adjusted_duty_cycle += TURN_STEP_SIZE;
+            if (current_state.duty_cycle < TURN_DUTY_CYCLE - TURN_BRAKE_STEP_SIZE) {
+                adjusted_duty_cycle += TURN_BRAKE_STEP_SIZE;
             } else {
                 adjusted_duty_cycle = TURN_DUTY_CYCLE;
             }
@@ -407,6 +405,9 @@ void turn_right_action(State state, TickType_t* last_turn_pulse) {
         }
         return;
     } else {
+        // set the value of last turn pulse to the current tick count
+        *last_turn_pulse = xTaskGetTickCount();
+
         motor_action_data_t motor_action_data;
         motor_action_data.motor_id = MOTOR_ALL;
 
@@ -418,8 +419,8 @@ void turn_right_action(State state, TickType_t* last_turn_pulse) {
 
         float adjusted_duty_cycle = state.duty_cycle;
 
-        if (state.duty_cycle > EPSILON + BRAKE_STEP_SIZE) {
-            adjusted_duty_cycle -= BRAKE_STEP_SIZE;
+        if (state.duty_cycle > EPSILON + TURN_BRAKE_STEP_SIZE) {
+            adjusted_duty_cycle -= TURN_BRAKE_STEP_SIZE;
         } else {
             adjusted_duty_cycle = 0.0f;
         }
@@ -429,7 +430,6 @@ void turn_right_action(State state, TickType_t* last_turn_pulse) {
         pwm_forward_action(motor_action_data);
         set_current_duty_cycle(adjusted_duty_cycle);
 
-        *last_turn_pulse = xTaskGetTickCount();
         return;
     }
 }

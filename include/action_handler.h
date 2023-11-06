@@ -8,6 +8,7 @@
 #define ACCEL_STEP_SIZE 25.0
 #define TURN_STEP_SIZE 25.0
 #define BRAKE_STEP_SIZE 2.0
+#define TURN_BRAKE_STEP_SIZE 30.0
 
 #define DECISION_INTERVAL_TIME_MS 50
 #define TURN_PULSE_MS 200
@@ -16,7 +17,7 @@
 #define TARGET_OFFSET 20
 #define ANGLE_OFFSET 10
 
-#define TURN_DUTY_CYCLE 35
+#define TURN_DUTY_CYCLE 50
 
 // Define really small number
 #define EPSILON 0.001
