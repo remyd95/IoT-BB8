@@ -8,7 +8,9 @@
 #define ACCEL_STEP_SIZE 25.0
 #define TURN_STEP_SIZE 25.0
 #define BRAKE_STEP_SIZE 2.0
-#define TURN_BRAKE_STEP_SIZE 30.0
+
+// Currently broken: stop only implemented for one direction
+#define TURN_BRAKE_STEP_SIZE 100.0
 
 #define DECISION_INTERVAL_TIME_MS 50
 #define TURN_PULSE_MS 200
@@ -34,5 +36,6 @@ float calculate_angle_difference(float angle_to_target, float yaw);
 void stop_action(State state);
 void forward_action(State state, Target target);
 void backward_action(State state, Target target);
-void turn_left_action(State state, TickType_t* last_turn_pulse);
-void turn_right_action(State state, TickType_t* last_turn_pulse);
+void do_turn_pulse(State state, TickType_t* last_turn_pulse);
+void stop_turn_action(State state, int action);
+void turn_action(State state, int action);

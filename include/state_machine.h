@@ -39,6 +39,7 @@ typedef struct {
     float acceleration;
     int action;
     int objective;
+    int previous_objective;
 } State;
 
 typedef struct {
@@ -62,6 +63,7 @@ void set_current_pitch(float pitch);
 void set_current_roll(float roll);
 void set_target_coordinates(float x, float y);
 void set_target_duty_cycle(float duty_cycle);
+void set_previous_objective(int previous_objective);
 float get_current_x_pos();
 float get_current_y_pos();
 float get_current_rotation();
@@ -75,6 +77,7 @@ float get_target_y_pos();
 float get_target_duty_cycle();
 int get_current_action();
 int get_current_objective();
+int get_previous_objective();
 State get_current_state();
 Target get_target();
 void report_state_task(void *args);

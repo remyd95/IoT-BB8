@@ -1,6 +1,6 @@
 #include "state_machine.h"
 
-volatile State current_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ACTION_NONE, OBJECTIVE_INIT};
+volatile State current_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ACTION_NONE, OBJECTIVE_INIT, OBJECTIVE_NONE};
 volatile Target target = {0.0, 0.0, 0.0};
 
 void set_current_coordinates(float x, float y) {
@@ -91,6 +91,17 @@ void set_current_objective(int objective) {
      * @return void
     */
     current_state.objective = objective;
+}
+
+void set_previous_objective(int previous_objective) {
+    /**
+     * Set the previous objective
+     * 
+     * @param previous_objective The previous objective
+     * 
+     * @return void
+    */
+    current_state.previous_objective = previous_objective;
 }
 
 void set_current_acceleration(float acceleration) {
@@ -207,6 +218,15 @@ int get_current_objective() {
      * @return The current objective
     */
     return current_state.objective;
+}
+
+int get_previous_objective() {
+    /**
+     * Get the previous objective
+     * 
+     * @return The previous objective
+    */
+    return current_state.previous_objective;
 }
 
 float get_current_duty_cycle() {
