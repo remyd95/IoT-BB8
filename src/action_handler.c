@@ -304,7 +304,7 @@ void backward_action(State state, Target target) {
 
 void do_turn_pulse(State state, TickType_t* last_turn_pulse) {
     /**
-     * Turn left
+     * Do a turn pulse
      * 
      * @param state The current state
      * @param target The target state
