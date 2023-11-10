@@ -37,5 +37,5 @@ void stop_action(State state);
 void forward_action(State state, Target target);
 void backward_action(State state, Target target);
 void do_turn_pulse(State state, TickType_t* last_turn_pulse);
-void stop_turn_action(State state, int action);
+void stop_turn_action(State state, int action, bool set_none);
 void turn_action(State state, int action);

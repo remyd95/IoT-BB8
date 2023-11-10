@@ -115,8 +115,8 @@ class MQTTClient:
                         x = float(payload[1])
                         y = float(payload[2])
                         rotation = float(payload[3])
-                        action = int(payload[4])
-                        state_update = {'x': x, 'y': y, 'rotation': rotation, 'action': action}
+                        objective = int(payload[4])
+                        state_update = {'x': x, 'y': y, 'rotation': rotation, 'objective': objective}
                         self.state_handler(ball_name, state_update, create_ball=True)
                 else:
                     logging.error("Invalid payload format: Expected ball id of 6 digits.")

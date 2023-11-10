@@ -72,6 +72,7 @@ class ControlPanel:
         self.initial_ball_warning = None
         self.keyboard_button = None
         self.imu_labels = {}
+        self.imu_header = None
         self.grid_row_offset = 20
 
         # Set up the GUI
@@ -208,8 +209,8 @@ class ControlPanel:
         self.max_duty_cycle_slider.grid(row=self.grid_row_offset + 8, column=0, padx=(50, 0), pady=(0, 20))
         self.max_duty_cycle_slider.set(100)
 
-        imu_header = tk.Label(self.root, text=f"\t\tIMU Data:\t\t")
-        imu_header.grid(row=1, column=1)
+        self.imu_header = tk.Label(self.root, text=f"\t\tIMU Data:\t\t")
+        self.imu_header.grid(row=1, column=1)
 
     def canvas_to_grid_coords(self, x, y):
         """
@@ -376,14 +377,24 @@ class ControlPanel:
             self.keyboard_mode = False
             self.keyboard_button.config(text="Enable Keyboard Mode")
             for widget in self.root.winfo_children():
-                if widget != self.keyboard_button and widget not in self.imu_labels.values():
+                # Check if widget is not the keyboard button, an IMU label or the max duty cycle slider
+                # We want to see/edit these values when the keyboard mode is enabled
+                if (widget != self.keyboard_button
+                        and widget not in self.imu_labels.values()
+                        and widget != self.max_duty_cycle_slider
+                        and widget != self.imu_header):
                     widget.configure(state="normal")
         else:
             if self.selected_ball:
                 self.keyboard_mode = True
                 self.keyboard_button.config(text="Disable Keyboard Mode")
                 for widget in self.root.winfo_children():
-                    if widget != self.keyboard_button and widget not in self.imu_labels.values():
+                    # Check if widget is not the keyboard button, an IMU label or the max duty cycle slider
+                    # We want to see/edit these values when the keyboard mode is enabled
+                    if (widget != self.keyboard_button
+                            and widget not in self.imu_labels.values()
+                            and widget != self.max_duty_cycle_slider
+                            and widget != self.imu_header):
                         widget.configure(state="disabled")
             else:
                 logging.warning("[GUI] Keyboard mode can not be enabled, ball is not selected.")
@@ -468,22 +479,26 @@ class ControlPanel:
             if ball.name == ball_name:
 
                 if ball_name in self.imu_labels:
-                    ball.x_pos = state_update['x']
-                    ball.y_pos = state_update['y']
-                    ball.action = get_action_from_value(state_update['action'])
-                    ball.objective = get_objective_from_value(state_update['objective'])
-                    ball.rotation = state_update['rotation']
-                    ball.pitch = state_update['pitch']
-                    ball.roll = state_update['roll']
-                    ball.speed = state_update['speed']
-                    ball.acceleration = state_update['acceleration']
-                    ball.duty_cycle = state_update['duty_cycle']
-                    imu_label = self.imu_labels[ball_name]
+                    try:
+                        ball.x_pos = state_update['x']
+                        ball.y_pos = state_update['y']
+                        ball.action = get_action_from_value(state_update['action'])
+                        ball.objective = get_objective_from_value(state_update['objective'])
+                        ball.rotation = state_update['rotation']
+                        ball.pitch = state_update['pitch']
+                        ball.roll = state_update['roll']
+                        ball.speed = state_update['speed']
+                        ball.acceleration = state_update['acceleration']
+                        ball.duty_cycle = state_update['duty_cycle']
+                        imu_label = self.imu_labels[ball_name]
 
-                    imu_label.config(
-                        text=f"{ball_name} - Yaw: {round(ball.rotation, 2)}, Pitch: {round(ball.pitch, 2)}, Roll: {round(ball.roll, 2)}\n"
-                             f"\tSpeed: {round(ball.speed, 2)}, Accel: {round(ball.acceleration, 2)}, Duty: {round(ball.duty_cycle, 2)}"
-                    )
+                        imu_label.config(
+                            text=f"{ball_name} - Yaw: {round(ball.rotation, 2)}, Pitch: {round(ball.pitch, 2)}, Roll: {round(ball.roll, 2)}\n"
+                                 f"\tSpeed: {round(ball.speed, 2)}, Accel: {round(ball.acceleration, 2)}, Duty: {round(ball.duty_cycle, 2)}"
+                        )
+
+                    except KeyError:
+                        logging.warning(f"[GUI] Received incomplete state update for {ball_name}")
 
                 if ball.gui_obj:
                     # Clear old GUI components

@@ -78,7 +78,7 @@ static void run_imu(imu_data_t *imu_data) {
     vector_t va, vg, vm;
 
     // Get the Accelerometer, Gyroscope and Magnetometer values.
-    ESP_ERROR_CHECK(get_accel_gyro_mag(&va, &vg, &vm));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(get_accel_gyro_mag(&va, &vg, &vm));
 
     // Transform these values to the orientation of our device.
     transform_accel_gyro(&va);
@@ -91,7 +91,7 @@ static void run_imu(imu_data_t *imu_data) {
                 0.0f, 0.0f, 0.0f);
 
     float temp;
-    ESP_ERROR_CHECK(get_temperature_celsius(&temp));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(get_temperature_celsius(&temp));
     
     float heading, pitch, roll;
     ahrs_get_euler_in_degrees(&heading, &pitch, &roll);

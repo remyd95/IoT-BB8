@@ -128,7 +128,8 @@ void process_objective(State state, Target target, int previous_objective) {
             }
         } else {
             if (state.action == ACTION_TURN_LEFT || state.action == ACTION_TURN_RIGHT) {
-                set_current_action(ACTION_STOP);
+                // TODO: Should be an action, fix this in the future
+                stop_turn_action(state, state.action, true);
                 return;
             }
             
@@ -233,10 +234,10 @@ void stop_action(State state) {
     motor_action_data.duty_cycle_left = adjusted_duty_cycle;
     motor_action_data.duty_cycle_right = adjusted_duty_cycle;
 
-    if (get_previous_objective() == OBJECTIVE_FORWARD) {
-        pwm_forward_action(motor_action_data);
-    } else if (get_previous_objective() == OBJECTIVE_BACKWARD){
+    if (get_previous_objective() == OBJECTIVE_BACKWARD){
         pwm_backward_action(motor_action_data);
+    } else {
+        pwm_forward_action(motor_action_data);
     }
 
     set_current_duty_cycle(adjusted_duty_cycle);    
@@ -315,7 +316,7 @@ void do_turn_pulse(State state, TickType_t* last_turn_pulse) {
     if ((xTaskGetTickCount() - *last_turn_pulse) < (TURN_INTERVAL_MS+TURN_PULSE_MS) / portTICK_PERIOD_MS) {
         if ((xTaskGetTickCount() - *last_turn_pulse) > TURN_INTERVAL_MS / portTICK_PERIOD_MS) {
             // Turn for a short pulse if we have waited for TURN_INTERVAL_MS
-            turn_action(state, get_current_action());
+            turn_action(state, state.action);
             return;
         }
         return;
@@ -323,12 +324,12 @@ void do_turn_pulse(State state, TickType_t* last_turn_pulse) {
         // set the value of last turn pulse to the current tick count
         *last_turn_pulse = xTaskGetTickCount();
         // Stop turning gracefully
-        stop_turn_action(state, get_current_action());
+        stop_turn_action(state, state.action, false);
         return;
     }
 }
 
-void stop_turn_action(State state, int action) {
+void stop_turn_action(State state, int action, bool set_none) {
     /**
      * Stop the turn action
      * 
@@ -346,6 +347,9 @@ void stop_turn_action(State state, int action) {
         motor_action_data_t motor_action_data;
         motor_action_data.motor_id = MOTOR_ALL;
         pwm_stop_action(motor_action_data);
+        if (set_none) {
+            set_current_action(ACTION_NONE);
+        }
         return;
     }
 

@@ -103,9 +103,9 @@ void identify_ball(esp_mqtt_client_handle_t client, char* event_data) {
         int client_id;
 
         if (sscanf(event_data, "FA %d", &client_id) == 1) {
-            int max_length = snprintf(NULL, 0, "%s %f %f %f %d", BALL_ID, get_current_x_pos(), get_current_y_pos(), get_current_rotation(), get_current_action());
+            int max_length = snprintf(NULL, 0, "%s %f %f %f %d", BALL_ID, get_current_x_pos(), get_current_y_pos(), get_current_rotation(), get_current_objective());
             char message[max_length + 1]; 
-            snprintf(message, max_length + 1, "%s %f %f %f %d", BALL_ID, get_current_x_pos(), get_current_y_pos(), get_current_rotation(), get_current_action());
+            snprintf(message, max_length + 1, "%s %f %f %f %d", BALL_ID, get_current_x_pos(), get_current_y_pos(), get_current_rotation(), get_current_objective());
 
             esp_mqtt_client_publish(client, "register", message, 0, 0, 0);
         }
