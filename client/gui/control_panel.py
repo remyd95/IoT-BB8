@@ -729,8 +729,6 @@ class ControlPanel:
         :return: None
         """
         if self.selected_ball:
-            print(data)
-            print(self.selected_ball.name)
             self.selected_ball.set_objective(ObjectiveType.INIT, self.mqtt_connector, data)
         else:
             logging.error("[GUI] Action ignored, ball is not selected.")
