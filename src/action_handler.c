@@ -376,6 +376,7 @@ void stop_turn_action(bool final_turn) {
         set_current_action(ACTION_NONE);
     }
 
+    set_current_duty_cycle(0.0f);
     return;
 }
 
