@@ -33,8 +33,8 @@
 
 #define DEBUG 0
 
-#define LED_PIN GPIO_NUM_21 // ONBOARD LED PIN FOR ESP32-S3
-//#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32
+//#define LED_PIN GPIO_NUM_21 // ONBOARD LED PIN FOR ESP32-S3
+#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32
 
 // WiFi
 const char* ssid = "Phone";
@@ -105,7 +105,7 @@ void app_main() {
     init_wifi(&connection_event_group, ssid, password);
     init_mqtt(&connection_event_group, &mqtt_client, broker_uri);
 
-    xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
+    //xTaskCreate(imu_task, "imu_task", 4096, &imu_data, 10, NULL);
     xTaskCreate(report_state_task, "state_task", 4096, &mqtt_client, 10, NULL);
     xTaskCreate(test_connection_task, "test_connection_task", 4096, NULL, 10, NULL);
 
