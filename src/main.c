@@ -116,14 +116,14 @@ void app_main() {
     while (1) {
         
         // Get current state and target
-        State current_state = get_current_state();
-        Target target = get_target();
+        // State current_state = get_current_state();
+        // Target target = get_target();
 
         // Process the objective to determine the next action
-        process_objective(current_state, target);
+        process_objective(get_current_state(), get_target());
 
         // Process the action to determine the next state
-        process_action(current_state, target, &last_turn_pulse);
+        process_action(get_current_state(), get_target(), &last_turn_pulse);
 
         // Update the current state after processing the objective and action
         if (current_state.objective != OBJECTIVE_INIT) {
@@ -146,9 +146,6 @@ void app_main() {
                 last_wakeup_time = current_time; 
             }
         }
-
-        // Set the previous objective to the current objective
-        set_previous_objective(current_state.objective);
 
         // Wait for the next decision interval
         vTaskDelay(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS);

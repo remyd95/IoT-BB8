@@ -18,21 +18,27 @@
 
 // Break behavior constants
 #define BRAKE_STEP_SIZE 3.0
-#define BRAKE_PULSE_DUTY_CYCLE_MULTIPLIER 1
+#define BRAKE_PULSE_DUTY_CYCLE_MULTIPLIER 2
 #define BRAKE_PULSE_INTERVAL_MS 30
 #define BRAKE_STEADY_PERIOD_MS 1000
+#define BRAKE_PULSE_PERIOD_MS 250
 
 // Target constants
 #define TARGET_OFFSET 20
 #define ANGLE_OFFSET 10
 
 // Define positional constants
-#define PITCH_STEADY_STATE 90
-#define ROLL_STEADY_STATE 0
-#define PITCH_OFFSET 25
+#define PITCH_STEADY_STATE 0
+#define ROLL_STEADY_STATE 90
+#define PITCH_OFFSET 0
+#define ROLL_OFFSET 25
 
 // Define really small number
 #define EPSILON 0.01
+
+
+extern volatile int stop_counter;
+extern volatile int brake_pulse_counter;
 
 // General functions
 int process_objective_switch(int previous_objective, int current_objective);
@@ -49,3 +55,9 @@ void backward_action(State state, Target target);
 void do_turn_pulse(State state, TickType_t* last_turn_pulse);
 void stop_turn_action(bool final_turn);
 void turn_action(State state, int action);
+int get_stop_counter();
+void increment_stop_counter();
+void reset_stop_counter();
+int get_brake_pulse_counter();
+void increment_brake_pulse_counter();
+void reset_brake_pulse_counter();

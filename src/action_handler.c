@@ -1,7 +1,8 @@
 #include <action_handler.h>
 #include "state_machine.h"
 
-int stop_counter = 0;
+volatile int stop_counter = 0;
+volatile int brake_pulse_counter = 0;
 
 int process_objective_switch(int previous_objective, int current_objective) {
     /**
@@ -13,15 +14,15 @@ int process_objective_switch(int previous_objective, int current_objective) {
      * @return 1 if the objective has changed, 0 otherwise
     */
     if (previous_objective != current_objective) {
-        if (previous_objective == OBJECTIVE_TURN_LEFT || previous_objective == OBJECTIVE_TURN_RIGHT) {
-            stop_turn_action(true);
-        } else {
+        if (previous_objective == OBJECTIVE_FORWARD || previous_objective == OBJECTIVE_BACKWARD) {
             set_current_action(ACTION_STOP);
+            return 1;
+        } else if (previous_objective == OBJECTIVE_TURN_LEFT || previous_objective == OBJECTIVE_TURN_RIGHT) {
+            stop_turn_action(true);
+            return 1;
         }
-        return 1;
-    } else {
-        return 0;
     }
+    return 0;
 }
 
 void process_objective(State state, Target target) {
@@ -61,6 +62,7 @@ void process_objective(State state, Target target) {
 
     if (state.objective == OBJECTIVE_STOP) {
         if (state.action == ACTION_NONE) {
+            set_previous_objective(get_current_objective());
             set_current_objective(OBJECTIVE_NONE);
             return;
         }
@@ -101,6 +103,7 @@ void process_objective(State state, Target target) {
         // If we are close enough to the target, stop
         if (distance_to_target < TARGET_OFFSET) {
             if (state.action == ACTION_NONE) {
+                set_previous_objective(get_current_objective());
                 set_current_objective(OBJECTIVE_NONE);
             } else {
                 set_current_action(ACTION_STOP);
@@ -187,6 +190,7 @@ void process_action(State state, Target target, TickType_t* last_turn_pulse) {
      * 
      * @return void
     */
+
     if (state.action == ACTION_NONE) {
         return;
     }
@@ -222,35 +226,43 @@ void stop_action(State state) {
 
     // Check safely if duty cycle is float 0
     if (state.duty_cycle < EPSILON) {
-        float pitch_difference = state.pitch - PITCH_STEADY_STATE;
+        float roll_difference = state.roll - ROLL_STEADY_STATE;
 
-        if (fabs(pitch_difference) < PITCH_OFFSET) { 
-            stop_counter++;
-            if (stop_counter >= (BRAKE_STEADY_PERIOD_MS/DECISION_INTERVAL_TIME_MS)) {
+        if (fabs(roll_difference) < ROLL_OFFSET) { 
+            increment_stop_counter();
+            reset_brake_pulse_counter();
+            if (get_stop_counter() >= (BRAKE_STEADY_PERIOD_MS/DECISION_INTERVAL_TIME_MS)) {
+                reset_stop_counter();
                 pwm_stop_action(motor_action_data);
                 set_current_action(ACTION_NONE);
             }
             return;
         }
         else {
-            stop_counter = 0;
-            float duty_cycle = fabs(pitch_difference)*BRAKE_PULSE_DUTY_CYCLE_MULTIPLIER;
-            motor_action_data.duty_cycle_left = duty_cycle;
-            motor_action_data.duty_cycle_right = duty_cycle;
+            reset_stop_counter();
+            increment_brake_pulse_counter();
 
-            // If we are not steady, we need to pulse to compensate
-            if (pitch_difference > 0){
-                pwm_forward_action(motor_action_data);
-            } else {
-                pwm_backward_action(motor_action_data);
-            } 
-            // Wait for the pulse to finish and then stop
-            vTaskDelay(BRAKE_PULSE_INTERVAL_MS / portTICK_PERIOD_MS);
-            pwm_stop_action(motor_action_data);
+            if (get_brake_pulse_counter() >= (BRAKE_PULSE_PERIOD_MS/DECISION_INTERVAL_TIME_MS)) {
+                reset_brake_pulse_counter();
+                float duty_cycle = fabs(roll_difference)*BRAKE_PULSE_DUTY_CYCLE_MULTIPLIER;
+                motor_action_data.duty_cycle_left = duty_cycle;
+                motor_action_data.duty_cycle_right = duty_cycle;
+
+                // If we are not steady, we need to pulse to compensate
+                if (roll_difference > 0){
+                    pwm_forward_action(motor_action_data);
+                } else {
+                    pwm_backward_action(motor_action_data);
+                } 
+                // Wait for the pulse to finish and then stop
+                vTaskDelay(BRAKE_PULSE_INTERVAL_MS / portTICK_PERIOD_MS);
+                pwm_stop_action(motor_action_data);
+            }
             return;
+
         }
     } else {
-        stop_counter = 0;
+        reset_stop_counter();
 
         float adjusted_duty_cycle = state.duty_cycle;
 
@@ -419,5 +431,65 @@ void turn_action(State state, int action) {
     }
 
     set_current_duty_cycle(adjusted_duty_cycle);
+    return;
+}
+
+void reset_stop_counter() {
+    /**
+     * Reset the stop counter
+     * 
+     * @return void
+    */
+    stop_counter = 0;
+    return;
+}
+
+int get_stop_counter() {
+    /**
+     * Get the stop counter
+     * 
+     * @return The stop counter
+    */
+    return stop_counter;
+}
+
+void increment_stop_counter() {
+    /**
+     * Increment the stop counter
+     * 
+     * @return void
+    */
+    stop_counter++;
+    return;
+}
+
+int get_brake_pulse_counter() {
+    /**
+     * Set the break pulse counter
+     * 
+     * @param value The value to set the break pulse counter to
+     * 
+     * @return void
+    */
+    return brake_pulse_counter;
+}
+
+void reset_brake_pulse_counter() {
+    /**
+     * Reset the break pulse counter
+     * 
+     * @return void
+    */
+    brake_pulse_counter = 0;
+    return;
+}
+
+void increment_brake_pulse_counter() {
+    /**
+     * Increment the break pulse counter
+     * 
+     * @return void
+    */
+    brake_pulse_counter++;
     return;
 }

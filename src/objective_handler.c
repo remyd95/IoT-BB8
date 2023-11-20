@@ -19,6 +19,7 @@ void process_objective_message(char* event_data) {
 
         if (sscanf(event_data, "FW %f", &max_duty_cycle) == 1) {
             float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
+            set_previous_objective(get_current_objective());
             set_current_objective(OBJECTIVE_FORWARD);
             set_target_duty_cycle(bounded_max_duty_cycle);
         }
@@ -27,6 +28,7 @@ void process_objective_message(char* event_data) {
 
         if (sscanf(event_data, "BW %f", &max_duty_cycle) == 1) {
             float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
+            set_previous_objective(get_current_objective());
             set_current_objective(OBJECTIVE_BACKWARD);
             set_target_duty_cycle(bounded_max_duty_cycle);
         }
@@ -35,6 +37,7 @@ void process_objective_message(char* event_data) {
 
         if (sscanf(event_data, "TL %f", &max_duty_cycle) == 1) {
             float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
+            set_previous_objective(get_current_objective());
             set_current_objective(OBJECTIVE_TURN_LEFT);
             set_target_duty_cycle(bounded_max_duty_cycle);
         }
@@ -43,10 +46,12 @@ void process_objective_message(char* event_data) {
 
         if (sscanf(event_data, "TR %f", &max_duty_cycle) == 1) {
             float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
+            set_previous_objective(get_current_objective());
             set_current_objective(OBJECTIVE_TURN_RIGHT);
             set_target_duty_cycle(bounded_max_duty_cycle);
         }
     } else if (strncmp(event_data, "ST", 2) == 0) {
+        set_previous_objective(get_current_objective());
         set_current_objective(OBJECTIVE_STOP);
         set_target_duty_cycle(0.0);
     } else if (strncmp(event_data, "MT", 2) == 0) {
@@ -54,6 +59,7 @@ void process_objective_message(char* event_data) {
 
         if (sscanf(event_data, "MT %f %f %f", &x, &y, &max_duty_cycle) == 3) {
             float bounded_max_duty_cycle = bound_max_duty_cycle(max_duty_cycle);
+            set_previous_objective(get_current_objective());
             set_current_objective(OBJECTIVE_MOVETO);
             set_target_coordinates(x, y);
             set_target_duty_cycle(bounded_max_duty_cycle);
@@ -62,9 +68,11 @@ void process_objective_message(char* event_data) {
         float x, y;
         if (sscanf(event_data, "IN %f %f", &x, &y) == 2) {
             set_current_coordinates(x, y);
+            set_previous_objective(get_current_objective());
             set_current_objective(OBJECTIVE_NONE);
         }
     } else if (strncmp(event_data, "RB", 2) == 0) {
+        set_previous_objective(get_current_objective());
         set_current_objective(OBJECTIVE_REBOOT);
     }
 }
