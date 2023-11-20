@@ -74,9 +74,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         case MQTT_EVENT_DATA:
             ESP_LOGI(MQTT_TAG, "MQTT data received");
 
-            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-            printf("DATA=%.*s\r\n", event->data_len, event->data);
-
             if (strncmp(event->topic, OBJECTIVE_TOPIC, strlen(MQTT_TAG)) == 0) {
                 process_objective_message(event->data);
             } else if (strncmp(event->topic, ID_TOPIC, 2) == 0) {

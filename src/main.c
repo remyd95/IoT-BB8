@@ -112,8 +112,6 @@ void app_main() {
     TickType_t last_wakeup_time = xTaskGetTickCount(); 
     TickType_t last_turn_pulse = xTaskGetTickCount(); 
 
-    int previous_objective = OBJECTIVE_UNDEFINED;
-
     // Main action loop starts here
     while (1) {
         
@@ -122,7 +120,7 @@ void app_main() {
         Target target = get_target();
 
         // Process the objective to determine the next action
-        process_objective(current_state, target, previous_objective);
+        process_objective(current_state, target);
 
         // Process the action to determine the next state
         process_action(current_state, target, &last_turn_pulse);
@@ -150,7 +148,7 @@ void app_main() {
         }
 
         // Set the previous objective to the current objective
-        previous_objective = current_state.objective;
+        set_previous_objective(current_state.objective);
 
         // Wait for the next decision interval
         vTaskDelay(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS);
