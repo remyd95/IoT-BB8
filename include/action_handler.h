@@ -32,7 +32,7 @@
 #define PITCH_OFFSET 25
 
 // Define really small number
-#define EPSILON 0.001
+#define EPSILON 0.01
 
 // General functions
 int process_objective_switch(int previous_objective, int current_objective);
