@@ -222,7 +222,7 @@ void stop_action(State state) {
 
     // Check safely if duty cycle is float 0
     if (state.duty_cycle < EPSILON) {
-        if ((state.pitch - PITCH_STEADY_STATE) < PITCH_OFFSET) { 
+        if (fabs(state.pitch - PITCH_STEADY_STATE) < PITCH_OFFSET) { 
             stop_counter++;
             if (stop_counter >= (BRAKE_STEADY_PERIOD_MS/DECISION_INTERVAL_TIME_MS)) {
                 pwm_stop_action(motor_action_data);
@@ -232,8 +232,9 @@ void stop_action(State state) {
         }
         else {
             stop_counter = 0;
-            motor_action_data.duty_cycle_left = BRAKE_PULSE_DUTY_CYCLE;
-            motor_action_data.duty_cycle_right = BRAKE_PULSE_DUTY_CYCLE;
+            float duty_cycle = fabs(state.pitch - PITCH_STEADY_STATE)*BRAKE_PULSE_DUTY_CYCLE_MULTIPLIER;
+            motor_action_data.duty_cycle_left = duty_cycle;
+            motor_action_data.duty_cycle_right = duty_cycle;
 
             // If we are not steady, we need to pulse in the opposite direction
             if (get_previous_objective() == OBJECTIVE_BACKWARD){
