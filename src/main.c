@@ -145,14 +145,14 @@ void app_main() {
             vector_t current_compensated_va = imu_data.compensated_va;
             
             // Calculate the velocity integrals
-            float velocity_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_compensated_va.x, current_compensated_va.x);
-            float velocity_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_compensated_va.y, current_compensated_va.y);
-            float velocity_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_compensated_va.z, current_compensated_va.z);
+            float velocity_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_compensated_va.x*9.81f, current_compensated_va.x*9.81f);
+            float velocity_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_compensated_va.y*9.81f, current_compensated_va.y*9.81f);
+            float velocity_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_compensated_va.z*9.81f, current_compensated_va.z*9.81f);
 
             // Calculate the displacement integrals
-            float displacement_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_velocity.x, velocity_x);
-            float displacement_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_velocity.y, velocity_y);
-            float displacement_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_velocity.z, velocity_z);
+            float displacement_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_velocity.x, velocity_x);
+            float displacement_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_velocity.y, velocity_y);
+            float displacement_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_velocity.z, velocity_z);
 
             // Update last velocity
             last_velocity.x = velocity_x;
@@ -160,7 +160,7 @@ void app_main() {
             last_velocity.z = velocity_z;
 
             // Calculate new coordinates based on current yaw and displacement
-            float total_displacement = sqrt(pow(displacement_x, 2) + pow(displacement_y, 2) + pow(displacement_z, 2));
+            float total_displacement = sqrt(pow(displacement_x, 2) + pow(displacement_y, 2) + pow(displacement_z, 2))*100;
             float new_x_pos = get_current_x_pos() + total_displacement * cos(DEG2RAD(get_current_rotation()));
             float new_y_pos = get_current_y_pos() + total_displacement * sin(DEG2RAD(get_current_rotation()));
 
@@ -168,8 +168,11 @@ void app_main() {
             set_current_coordinates(new_x_pos, new_y_pos);
 
             // Debug output
-            printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
-            printf("Total displacement: %f\n", total_displacement);
+            // printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
+            // printf("Total displacement: %f\n", total_displacement);
+            // printf("Compensated acceleration: X: %f, Y: %f, Z: %f\n", current_compensated_va.x, current_compensated_va.y, current_compensated_va.z);
+            // printf("Not compensated acceleration: X: %f, Y: %f, Z: %f\n", imu_data.accelx, imu_data.accely, imu_data.accelz);
+            printf("Velocity: X: %f, Y: %f, Z: %f\n", velocity_x, velocity_y, velocity_z);
 
             TickType_t current_time = xTaskGetTickCount();
             float elapsed_time = (current_time - last_wakeup_time) * portTICK_PERIOD_MS / 1000.0;

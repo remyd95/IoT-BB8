@@ -106,6 +106,7 @@ static void run_imu(imu_data_t *imu_data) {
     imu_data->temp = temp;
     imu_data->accelx = va.x;
     imu_data->accely = va.y;
+    imu_data->accelz = va.z;
     imu_data->compensated_va = compensated_va;
 
     pause_sample();

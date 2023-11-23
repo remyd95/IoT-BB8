@@ -28,7 +28,7 @@
 #define BETA 0.2f
 #define DEG2RAD(deg) (deg * M_PI / 180.0f)
 
-#define GRAVITY 9.81
+#define GRAVITY 1.00f
 
 typedef struct {
     float temp;
@@ -37,6 +37,7 @@ typedef struct {
     float roll;
     float accelx;
     float accely;
+    float accelz;
     vector_t compensated_va; 
 } imu_data_t;
 

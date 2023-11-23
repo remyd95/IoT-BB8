@@ -12,5 +12,5 @@ float integrate(float x1, float x2, float y1, float y2) {
      * 
      * @return float    New value
     */
-    return (y1+y2) * (x2-x1) * 0.5 * 0.001;
+    return (y2-y1) * (x2-x1) * 0.5 * 0.050;
 }
