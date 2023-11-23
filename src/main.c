@@ -160,7 +160,16 @@ void app_main() {
             last_velocity.z = velocity_z;
 
             // Calculate new coordinates based on current yaw and displacement
-            // todo
+            float total_displacement = sqrt(pow(displacement_x, 2) + pow(displacement_y, 2) + pow(displacement_z, 2));
+            float new_x_pos = get_current_x_pos() + total_displacement * cos(DEG2RAD(get_current_rotation()));
+            float new_y_pos = get_current_y_pos() + total_displacement * sin(DEG2RAD(get_current_rotation()));
+
+            // Update the current coordinates
+            set_current_coordinates(new_x_pos, new_y_pos);
+
+            // Debug output
+            printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
+            printf("Total displacement: %f\n", total_displacement);
 
             TickType_t current_time = xTaskGetTickCount();
             float elapsed_time = (current_time - last_wakeup_time) * portTICK_PERIOD_MS / 1000.0;
