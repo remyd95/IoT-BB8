@@ -115,6 +115,7 @@ void app_main() {
 
     vector_t current_compensated_va = imu_data.compensated_va;
     vector_t last_compensated_va = imu_data.compensated_va;
+    vector_t last_velocity = {0.0f, 0.0f, 0.0f};
 
     // Main action loop starts here
     while (1) {
@@ -149,9 +150,14 @@ void app_main() {
             float velocity_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_compensated_va.z, current_compensated_va.z);
 
             // Calculate the displacement integrals
-            float displacement_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, 0.0f, 0.0f);
-            float displacement_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, 0.0f, 0.0f);
-            float displacement_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, 0.0f, 0.0f);
+            float displacement_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_velocity.x, velocity_x);
+            float displacement_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_velocity.y, velocity_y);
+            float displacement_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_velocity.z, velocity_z);
+
+            // Update last velocity
+            last_velocity.x = velocity_x;
+            last_velocity.y = velocity_y;
+            last_velocity.z = velocity_z;
 
             // Calculate new coordinates based on current yaw and displacement
             // todo
