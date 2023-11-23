@@ -11,17 +11,16 @@
 #define TURN_PULSE_MS 75
 #define TURN_INTERVAL_MS 50
 #define TURN_STEP_SIZE 100.0
-#define TURN_DUTY_CYCLE 35
+#define TURN_DUTY_CYCLE 20
 
 // Move constants
 #define ACCEL_STEP_SIZE 100.0
 
 // Break behavior constants
 #define BRAKE_STEP_SIZE 3.0
-#define BRAKE_PULSE_DUTY_CYCLE_MULTIPLIER 2
-#define BRAKE_PULSE_INTERVAL_MS 30
+#define BRAKE_PULSE_DUTY_CYCLE_MULTIPLIER 1
 #define BRAKE_STEADY_PERIOD_MS 1000
-#define BRAKE_PULSE_PERIOD_MS 250
+#define BRAKE_PULSE_PERIOD_MS 200
 
 // Target constants
 #define TARGET_OFFSET 20
@@ -31,7 +30,7 @@
 #define PITCH_STEADY_STATE 0
 #define ROLL_STEADY_STATE 90
 #define PITCH_OFFSET 0
-#define ROLL_OFFSET 25
+#define ROLL_OFFSET 50
 
 // Define really small number
 #define EPSILON 0.01
