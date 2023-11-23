@@ -1,5 +1,7 @@
 #include "imu.h"
 
+#define GRAVITY 9.81
+
 // calibration data, replace with offsets from calibration mode
 calibration_t cal = {
     .mag_offset = {.x = -8.394531, .y = 4.224609, .z = 19.142578},
@@ -90,6 +92,9 @@ static void run_imu(imu_data_t *imu_data) {
                 va.x, va.y, va.z,
                 0.0f, 0.0f, 0.0f);
 
+    vector_t compensated_va;
+    compensateGravity(va, &compensated_va);
+
     float temp;
     ESP_ERROR_CHECK_WITHOUT_ABORT(get_temperature_celsius(&temp));
     
@@ -106,6 +111,21 @@ static void run_imu(imu_data_t *imu_data) {
 
     pause_sample();
   }
+}
+
+
+void compensateGravity(vector_t acc, vector_t *compensated_va){
+  /**
+   * Compensate accelerometer for gravity
+  */
+  vector_t g[3];
+  g->x = 2 * (q1 * q3 - q0 * q2) * GRAVITY;
+  g->y = 2 * (q0 * q1 + q2 * q3) * GRAVITY;
+  g->z = (q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3) * GRAVITY;
+
+  compensated_va->x = acc.x - g->x;
+  compensated_va->y = acc.y - g->y;
+  compensated_va->z = acc.z - g->z; 
 }
 
 static void imu_cleanup(void) {
