@@ -15,8 +15,10 @@ int process_objective_switch(int previous_objective, int current_objective) {
     */
     if (previous_objective != current_objective) {
         if (previous_objective == OBJECTIVE_FORWARD || previous_objective == OBJECTIVE_BACKWARD) {
-            set_current_action(ACTION_STOP);
-            return 1;
+            if (get_current_action() == ACTION_FORWARD || get_current_action() == ACTION_BACKWARD) {
+                set_current_action(ACTION_STOP);
+                return 1;
+            }
         } else if (previous_objective == OBJECTIVE_TURN_LEFT || previous_objective == OBJECTIVE_TURN_RIGHT) {
             stop_turn_action(true);
             return 1;
@@ -254,8 +256,8 @@ void stop_action(State state) {
                 } else {
                     pwm_backward_action(motor_action_data);
                 } 
+            } else {
                 // Wait for the pulse to finish and then stop
-                vTaskDelay(BRAKE_PULSE_INTERVAL_MS / portTICK_PERIOD_MS);
                 pwm_stop_action(motor_action_data);
             }
             return;

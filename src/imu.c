@@ -1,7 +1,5 @@
 #include "imu.h"
 
-#define GRAVITY 9.81
-
 // calibration data, replace with offsets from calibration mode
 calibration_t cal = {
     .mag_offset = {.x = -8.394531, .y = 4.224609, .z = 19.142578},
@@ -108,13 +106,13 @@ static void run_imu(imu_data_t *imu_data) {
     imu_data->temp = temp;
     imu_data->accelx = va.x;
     imu_data->accely = va.y;
+    imu_data->compensated_va = compensated_va;
 
     pause_sample();
   }
 }
 
-
-void compensateGravity(vector_t acc, vector_t *compensated_va){
+void compensateGravity(vector_t acc, vector_t *compensated_va) {
   /**
    * Compensate accelerometer for gravity
   */

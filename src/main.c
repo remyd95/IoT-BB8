@@ -5,6 +5,7 @@
 #include "objective_handler.h"
 #include "action_handler.h"
 #include "imu.h"
+#include "integral.h"
 #include "state_machine.h"
 
 // Std
@@ -112,6 +113,9 @@ void app_main() {
     TickType_t last_wakeup_time = xTaskGetTickCount(); 
     TickType_t last_turn_pulse = xTaskGetTickCount(); 
 
+    vector_t current_compensated_va = imu_data.compensated_va;
+    vector_t last_compensated_va = imu_data.compensated_va;
+
     // Main action loop starts here
     while (1) {
         
@@ -134,6 +138,23 @@ void app_main() {
             set_current_rotation(imu_data.heading);
             set_current_pitch(imu_data.pitch);
             set_current_roll(imu_data.roll);
+
+            // Get the compensated acceleration from the IMU
+            last_compensated_va = current_compensated_va;
+            vector_t current_compensated_va = imu_data.compensated_va;
+            
+            // Calculate the velocity integrals
+            float velocity_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_compensated_va.x, current_compensated_va.x);
+            float velocity_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_compensated_va.y, current_compensated_va.y);
+            float velocity_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, last_compensated_va.z, current_compensated_va.z);
+
+            // Calculate the displacement integrals
+            float displacement_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, 0.0f, 0.0f);
+            float displacement_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, 0.0f, 0.0f);
+            float displacement_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+DECISION_INTERVAL_TIME_MS, 0.0f, 0.0f);
+
+            // Calculate new coordinates based on current yaw and displacement
+            // todo
 
             TickType_t current_time = xTaskGetTickCount();
             float elapsed_time = (current_time - last_wakeup_time) * portTICK_PERIOD_MS / 1000.0;
