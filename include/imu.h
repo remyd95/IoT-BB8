@@ -21,7 +21,7 @@
 #define I2C_MASTER_SDA_IO GPIO_NUM_5     /*!< gpio number for I2C master data  */
 
 #define I2C_MASTER_NUM I2C_NUM_0
-//#define CONFIG_CALIBRATION_MODE
+// #define CONFIG_CALIBRATION_MODE
 
 #define SAMPLE_FREQ_Hz 200.0f
 #define SAMPLE_INTERVAL_MS (1000 / SAMPLE_FREQ_Hz) // Sample Rate in milliseconds

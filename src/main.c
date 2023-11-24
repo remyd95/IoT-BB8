@@ -38,8 +38,11 @@
 //#define LED_PIN GPIO_NUM_2 // ONBOARD LED PIN FOR ESP32
 
 // WiFi
-const char* ssid = "Phone";
-const char* password =  "wifi1234";
+// const char* ssid = "Phone";
+// const char* password =  "wifi1234";
+const char* ssid = "Oneplus_Nord";
+const char* password =  "perenpatser";
+
 
 // MQTT
 const char* broker_uri = "mqtt://duijsens.dev";
@@ -170,9 +173,13 @@ void app_main() {
             // Debug output
             // printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
             // printf("Total displacement: %f\n", total_displacement);
-            // printf("Compensated acceleration: X: %f, Y: %f, Z: %f\n", current_compensated_va.x, current_compensated_va.y, current_compensated_va.z);
+            // if (current_compensated_va.x + current_compensated_va.y + current_compensated_va.z > 0.2){
+            //     printf("Compensated acceleration: X: %f, Y: %f, Z: %f\n", current_compensated_va.x, current_compensated_va.y, current_compensated_va.z);
+            // }
             // printf("Not compensated acceleration: X: %f, Y: %f, Z: %f\n", imu_data.accelx, imu_data.accely, imu_data.accelz);
-            printf("Velocity: X: %f, Y: %f, Z: %f\n", velocity_x, velocity_y, velocity_z);
+            if (velocity_x + velocity_y + velocity_z > 0.1){
+                printf("Velocity: X: %f, Y: %f, Z: %f\n", velocity_x, velocity_y, velocity_z);
+            }
 
             TickType_t current_time = xTaskGetTickCount();
             float elapsed_time = (current_time - last_wakeup_time) * portTICK_PERIOD_MS / 1000.0;

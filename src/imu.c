@@ -2,13 +2,30 @@
 
 // calibration data, replace with offsets from calibration mode
 calibration_t cal = {
-    .mag_offset = {.x = -8.394531, .y = 4.224609, .z = 19.142578},
-    .mag_scale = {.x = 1.011759, .y = 1.016019, .z = 0.973342},
-    .accel_offset = {.x = 0.021837, .y = 0.043132, .z = -0.144693},
-    .accel_scale_lo = {.x = 1.011026, .y = 1.013828, .z = 0.974942},
-    .accel_scale_hi = {.x = -0.987007, .y = -0.980326, .z = -1.048787},
-    .gyro_bias_offset = {.x = 0.582807, .y = 0.661291, .z = -1.661415}
-};
+    // .mag_offset = {.x = -8.394531, .y = 4.224609, .z = 19.142578},
+    // .mag_scale = {.x = 1.011759, .y = 1.016019, .z = 0.973342},
+    // // .accel_offset = {.x = 0.021837, .y = 0.043132, .z = -0.144693},
+    // // .accel_scale_lo = {.x = 1.011026, .y = 1.013828, .z = 0.974942},
+    // // .accel_scale_hi = {.x = -0.987007, .y = -0.980326, .z = -1.048787},
+    // .accel_offset = {.x = 0.021837, .y =  0.043132, .z = 0.9}, //mine
+    // .accel_scale_lo = {.x = 1.011026, .y = 1.013828, .z = 0.974942}, //mine
+    // .accel_scale_hi = {.x = -0.987007, .y = -0.980326, .z = -1.048787}, //mine
+    // .gyro_bias_offset = {.x = 0.582807, .y = 0.661291, .z = -1.661415},
+
+    // .mag_offset = {.x = -19.787109, .y = 71.585938, .z = -80.050781},
+    // .mag_scale = {.x = 1.234878, .y = 1.413219, .z = 0.674491},
+    // .accel_offset = {.x = -0.016534, .y = 0.097984, .z = -0.111284},
+    // .accel_scale_lo = {.x = 0.997406, .y = 1.042805, .z = 0.955728},
+    // .accel_scale_hi = {.x = -1.007638, .y = -0.957327, .z = -1.050301},
+    // .gyro_bias_offset = {.x = 1.229639, .y = -1.236117, .z = 0.032385}   
+
+    .mag_offset = {.x = -19.787109, .y = 71.585938, .z = -80.050781},
+    .mag_scale = {.x = 1.234878, .y = 1.413219, .z = 0.674491},
+    .accel_offset = {.x = -0.016534, .y = 0.097984, .z = -0.111284},
+    .accel_scale_lo = {.x = 0.997406, .y = 1.042805, .z = 0.955728},
+    .accel_scale_hi = {.x = -1.007638, .y = -0.957327, .z = -1.15}, //Changed manually
+    .gyro_bias_offset = {.x = 1.229639, .y = -1.236117, .z = 0.032385}   
+     };
 
 static void transform_accel_gyro(vector_t *v) {
   /**
