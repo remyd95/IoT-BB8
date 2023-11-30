@@ -193,6 +193,7 @@ void app_main() {
 
                 // Calculate new coordinates based on current yaw and displacement
                 total_displacement = sqrt(pow(displacement_x, 2) + pow(displacement_y, 2) + pow(displacement_z, 2))*100;
+                total_displacement = (total_displacement - 111.88) / 9.58;
             }
             float current_rotation = get_current_rotation();
             tot_disp = tot_disp + total_displacement;
