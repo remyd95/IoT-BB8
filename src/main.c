@@ -54,6 +54,26 @@ EventGroupHandle_t connection_event_group;
 // IMU
 imu_data_t imu_data;
 
+int arraysize = 100;
+
+
+float get_average(float *array) {
+        float sum = 0;
+        for (int i = 0; i < arraysize; i++) {
+            sum += array[i];
+        }
+        return sum / arraysize;
+    }
+
+float get_standard_deviation(float* array) {
+    float sum = 0;
+    float average = get_average(array);
+    for (int i = 0; i < arraysize; i++) {
+        sum += pow(array[i] - average, 2);
+    }
+    return sqrt(sum / arraysize);
+}
+
 
 static void configure_led(void) {
     /**
@@ -120,7 +140,13 @@ void app_main() {
     vector_t last_compensated_va = imu_data.compensated_va;
     vector_t last_velocity = {0.0f, 0.0f, 0.0f};
 
+    float x_array[arraysize];
+    float y_array[arraysize];
+    float z_array[arraysize];
+    int array_index = 0;
+
     // Main action loop starts here
+    int tot_disp = 0;
     while (1) {
         
         // Get current state and target
@@ -135,10 +161,10 @@ void app_main() {
 
         // Update the current state after processing the objective and action
         if (current_state.objective != OBJECTIVE_INIT) {
-            float new_x = get_current_x_pos();
-            float new_y = get_current_y_pos();
+            // float new_x = get_current_x_pos();
+            // float new_y = get_current_y_pos();
 
-            set_current_coordinates(new_x, new_y);
+            // set_current_coordinates(new_x, new_y);
             set_current_rotation(imu_data.heading);
             set_current_pitch(imu_data.pitch);
             set_current_roll(imu_data.roll);
@@ -146,26 +172,41 @@ void app_main() {
             // Get the compensated acceleration from the IMU
             last_compensated_va = current_compensated_va;
             vector_t current_compensated_va = imu_data.compensated_va;
+            float total_displacement = 0.0f;
             
-            // Calculate the velocity integrals
-            float velocity_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_compensated_va.x*9.81f, current_compensated_va.x*9.81f);
-            float velocity_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_compensated_va.y*9.81f, current_compensated_va.y*9.81f);
-            float velocity_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_compensated_va.z*9.81f, current_compensated_va.z*9.81f);
+            if(imu_data.compensated_va.x + imu_data.compensated_va.y + imu_data.compensated_va.z > 0.2 || imu_data.compensated_va.x + imu_data.compensated_va.y + imu_data.compensated_va.z < -0.2){
+            
+                // Calculate the velocity integrals
+                float velocity_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_compensated_va.x*9.81f, current_compensated_va.x*9.81f);
+                float velocity_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_compensated_va.y*9.81f, current_compensated_va.y*9.81f);
+                float velocity_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_compensated_va.z*9.81f, current_compensated_va.z*9.81f);
 
-            // Calculate the displacement integrals
-            float displacement_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_velocity.x, velocity_x);
-            float displacement_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_velocity.y, velocity_y);
-            float displacement_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_velocity.z, velocity_z);
+                // Calculate the displacement integrals
+                float displacement_x = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_velocity.x, velocity_x);
+                float displacement_y = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_velocity.y, velocity_y);
+                float displacement_z = integrate((float)xTaskGetTickCount(), (float)xTaskGetTickCount()+(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS), last_velocity.z, velocity_z);
 
-            // Update last velocity
-            last_velocity.x = velocity_x;
-            last_velocity.y = velocity_y;
-            last_velocity.z = velocity_z;
+                // Update last velocity
+                last_velocity.x = velocity_x;
+                last_velocity.y = velocity_y;
+                last_velocity.z = velocity_z;
 
-            // Calculate new coordinates based on current yaw and displacement
-            float total_displacement = sqrt(pow(displacement_x, 2) + pow(displacement_y, 2) + pow(displacement_z, 2))*100;
-            float new_x_pos = get_current_x_pos() + total_displacement * cos(DEG2RAD(get_current_rotation()));
-            float new_y_pos = get_current_y_pos() + total_displacement * sin(DEG2RAD(get_current_rotation()));
+                // Calculate new coordinates based on current yaw and displacement
+                total_displacement = sqrt(pow(displacement_x, 2) + pow(displacement_y, 2) + pow(displacement_z, 2))*100;
+            }
+            float current_rotation = get_current_rotation();
+            tot_disp = tot_disp + total_displacement;
+            printf("Total displacement: %d\n", tot_disp);
+
+            // printf("Current rotation: %f\n", current_rotation);
+            // printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
+            // // printf("RAD: %f\n", DEG2RAD(90.0f-current_rotation));
+            // printf("cos: %f, sin: %f\n", cos(degrees_to_radians(90.0f-current_rotation)), sin(degrees_to_radians(90.0f-current_rotation)));
+            // // printf("cos: %f, sin: %f\n", cos((90.0f-current_rotation)*(M_PI/180.0f)), sin((90.0f-current_rotation)*(M_PI/180.0f)));
+
+            float new_x_pos = get_current_x_pos() + total_displacement * cos(degrees_to_radians(90.0f-current_rotation));
+            float new_y_pos = get_current_y_pos() + total_displacement * sin(degrees_to_radians(90.0f-current_rotation));
+            // printf("New coordinates: X: %f, Y: %f\n", new_x_pos, new_y_pos);
 
             // Update the current coordinates
             set_current_coordinates(new_x_pos, new_y_pos);
@@ -173,13 +214,25 @@ void app_main() {
             // Debug output
             // printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
             // printf("Total displacement: %f\n", total_displacement);
-            // if (current_compensated_va.x + current_compensated_va.y + current_compensated_va.z > 0.2){
+            // if (current_compensated_va.x + current_compensated_va.y + current_compensated_va.z > 0.2 || current_compensated_va.x + current_compensated_va.y + current_compensated_va.z < -0.2){
             //     printf("Compensated acceleration: X: %f, Y: %f, Z: %f\n", current_compensated_va.x, current_compensated_va.y, current_compensated_va.z);
             // }
-            // printf("Not compensated acceleration: X: %f, Y: %f, Z: %f\n", imu_data.accelx, imu_data.accely, imu_data.accelz);
-            if (velocity_x + velocity_y + velocity_z > 0.1){
-                printf("Velocity: X: %f, Y: %f, Z: %f\n", velocity_x, velocity_y, velocity_z);
-            }
+            // if(imu_data.accelx + imu_data.accely + imu_data.accelz > 1.2){
+            //     printf("Not compensated acceleration: X: %f, Y: %f, Z: %f\n", imu_data.accelx, imu_data.accely, imu_data.accelz);
+            // }
+            // x_array[array_index] = imu_data.accelx;
+            // y_array[array_index] = imu_data.accely;
+            // z_array[array_index] = imu_data.accelz;
+
+            // array_index = array_index+1;
+            // if (array_index >= arraysize) {
+            //     printf("AVG: X: %f, Y: %f, Z: %f ; SD: X: %f, Y: %f, Z: %f\n", get_average(x_array), get_average(y_array), get_average(z_array), get_standard_deviation(x_array), get_standard_deviation(y_array), get_standard_deviation(z_array));
+            //     array_index = 0;
+            // }
+
+            // if (velocity_x + velocity_y + velocity_z > 0.1){
+            //     printf("Velocity: X: %f, Y: %f, Z: %f\n", velocity_x, velocity_y, velocity_z);
+            // }
 
             TickType_t current_time = xTaskGetTickCount();
             float elapsed_time = (current_time - last_wakeup_time) * portTICK_PERIOD_MS / 1000.0;
@@ -196,4 +249,5 @@ void app_main() {
         // Wait for the next decision interval
         vTaskDelay(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS);
     }
+
 }

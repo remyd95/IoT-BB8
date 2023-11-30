@@ -26,7 +26,7 @@
 #define SAMPLE_FREQ_Hz 200.0f
 #define SAMPLE_INTERVAL_MS (1000 / SAMPLE_FREQ_Hz) // Sample Rate in milliseconds
 #define BETA 0.2f
-#define DEG2RAD(deg) (deg * M_PI / 180.0f)
+// #define DEG2RAD(deg) (deg * M_PI / 180.0f)
 
 #define GRAVITY 1.00f
 
@@ -44,3 +44,4 @@ typedef struct {
 void imu_task(void *args);
 void pause_sample(void);
 void compensateGravity(vector_t acc, vector_t *compensated_va);
+float degrees_to_radians(float degrees);

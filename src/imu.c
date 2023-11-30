@@ -19,12 +19,26 @@ calibration_t cal = {
     // .accel_scale_hi = {.x = -1.007638, .y = -0.957327, .z = -1.050301},
     // .gyro_bias_offset = {.x = 1.229639, .y = -1.236117, .z = 0.032385}   
 
-    .mag_offset = {.x = -19.787109, .y = 71.585938, .z = -80.050781},
-    .mag_scale = {.x = 1.234878, .y = 1.413219, .z = 0.674491},
-    .accel_offset = {.x = -0.016534, .y = 0.097984, .z = -0.111284},
-    .accel_scale_lo = {.x = 0.997406, .y = 1.042805, .z = 0.955728},
-    .accel_scale_hi = {.x = -1.007638, .y = -0.957327, .z = -1.15}, //Changed manually
-    .gyro_bias_offset = {.x = 1.229639, .y = -1.236117, .z = 0.032385}   
+    // .mag_offset = {.x = -19.787109, .y = 71.585938, .z = -80.050781},
+    // .mag_scale = {.x = 1.234878, .y = 1.413219, .z = 0.674491},
+    // .accel_offset = {.x = -0.016534, .y = 0.097984, .z = -0.111284},
+    // .accel_scale_lo = {.x = 0.997406, .y = 1.10, .z = 0.955728},
+    // .accel_scale_hi = {.x = -1.007638, .y = -1.0, .z = -1.15}, //Changed manually
+    // .gyro_bias_offset = {.x = 1.229639, .y = -1.236117, .z = 0.032385}   
+
+    // .accel_offset = {.x = 0.004978, .y = 0.096250, .z = -0.053031},
+    // .accel_scale_lo = {.x = 1.000143, .y = 1.044014, .z = 0.957282},
+    // .accel_scale_hi = {.x = -0.989888, .y = -0.953421, .z = -1.042077},
+    // .gyro_bias_offset = {.x = 1.719505, .y = -0.868046, .z = -0.795749},
+    // .mag_offset = {.x = -91.140625, .y = 46.921875, .z = -392.132812},
+    // .mag_scale = {.x = 1.002172, .y = 1.085780, .z = 0.924924},
+
+    .accel_offset = {.x = 0.004978, .y = 0.096250, .z = -0.053031},
+    .accel_scale_lo = {.x = 1.000143, .y = 1.044014, .z = 0.957282},
+    .accel_scale_hi = {.x = -0.989888, .y = -0.953421, .z = -1.042077},
+    .gyro_bias_offset = {.x = 1.719505, .y = -0.868046, .z = -0.795749},
+    .mag_offset = {.x = -91.140625, .y = 46.921875, .z = -392.132812},
+    .mag_scale = {.x = 1.002172, .y = 1.085780, .z = 0.924924},
      };
 
 static void transform_accel_gyro(vector_t *v) {
@@ -103,7 +117,7 @@ static void run_imu(imu_data_t *imu_data) {
     transform_mag(&vm);
 
     // Apply the AHRS algorithm
-    ahrs_update(0.5*DEG2RAD(vg.x), 0.5*DEG2RAD(vg.y), 0.5*DEG2RAD(vg.z),
+    ahrs_update(0.5*degrees_to_radians(vg.x), 0.5*degrees_to_radians(vg.y), 0.5*degrees_to_radians(vg.z),
                 va.x, va.y, va.z,
                 0.0f, 0.0f, 0.0f);
 
@@ -142,6 +156,17 @@ void compensateGravity(vector_t acc, vector_t *compensated_va) {
   compensated_va->x = acc.x - g->x;
   compensated_va->y = acc.y - g->y;
   compensated_va->z = acc.z - g->z; 
+}
+
+float degrees_to_radians(float degrees) {
+  /**
+   * Convert degrees to radians
+   * 
+   * @param degrees: degrees to convert
+   * 
+   * @return radians
+   */
+  return degrees * M_PI / 180.0f;
 }
 
 static void imu_cleanup(void) {
