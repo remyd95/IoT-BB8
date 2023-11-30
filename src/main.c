@@ -196,7 +196,7 @@ void app_main() {
             }
             float current_rotation = get_current_rotation();
             tot_disp = tot_disp + total_displacement;
-            printf("Total displacement: %d\n", tot_disp);
+            // printf("Total displacement: %d\n", tot_disp);
 
             set_total_displacement(tot_disp);
 

@@ -28,9 +28,9 @@
 
 // Define positional constants
 #define PITCH_STEADY_STATE 0
-#define ROLL_STEADY_STATE 90
+#define ROLL_STEADY_STATE 64
 #define PITCH_OFFSET 0
-#define ROLL_OFFSET 50
+#define ROLL_OFFSET 1000 //Off
 
 // Define really small number
 #define EPSILON 0.01
