@@ -233,9 +233,9 @@ void stop_action(State state) {
         if (fabs(roll_difference) < ROLL_OFFSET) { 
             increment_stop_counter();
             reset_brake_pulse_counter();
+            pwm_stop_action(motor_action_data);
             if (get_stop_counter() >= (BRAKE_STEADY_PERIOD_MS/DECISION_INTERVAL_TIME_MS)) {
                 reset_stop_counter();
-                pwm_stop_action(motor_action_data);
                 set_current_action(ACTION_NONE);
             }
             return;

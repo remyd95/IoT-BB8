@@ -126,7 +126,7 @@ class MQTTClient:
             ball_name = msg.topic.split('/')[0]
             payload = msg.payload.decode('utf-8').split()
 
-            if len(payload) == 10:
+            if len(payload) == 11:
                 try:
                     x = float(payload[0])
                     y = float(payload[1])
@@ -158,7 +158,7 @@ class MQTTClient:
                 except ValueError:
                     logging.error("Invalid payload format: Unable to convert to numbers.")
             else:
-                logging.error("Invalid payload format: Expected 10 space-separated values.")
+                logging.error("Invalid payload format: Expected 11 space-separated values.")
 
     def remove_inactive_balls(self):
         """
