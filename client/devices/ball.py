@@ -29,6 +29,7 @@ class Ball:
         self.roll = None
         self.speed = None
         self.acceleration = None
+        self.total_displacement = None
 
         # Target location
         self.has_target_location = False

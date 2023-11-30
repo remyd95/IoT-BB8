@@ -198,6 +198,8 @@ void app_main() {
             tot_disp = tot_disp + total_displacement;
             printf("Total displacement: %d\n", tot_disp);
 
+            set_total_displacement(tot_disp);
+
             // printf("Current rotation: %f\n", current_rotation);
             // printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
             // // printf("RAD: %f\n", DEG2RAD(90.0f-current_rotation));

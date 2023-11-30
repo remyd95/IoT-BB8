@@ -138,6 +138,7 @@ class MQTTClient:
                     acceleration = float(payload[7])
                     duty_cycle = float(payload[8])
                     objective = int(payload[9])
+                    total_displacement = float(payload[10])
 
                     state_update = {'x': x,
                                     'y': y,
@@ -148,7 +149,8 @@ class MQTTClient:
                                     'speed': speed,
                                     'acceleration': acceleration,
                                     'duty_cycle': duty_cycle,
-                                    'objective': objective
+                                    'objective': objective,
+                                    'total_displacement': total_displacement
                                     }
 
                     self.last_state_update[ball_name] = time.time()

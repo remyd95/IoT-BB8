@@ -1,6 +1,6 @@
 #include "state_machine.h"
 
-volatile State current_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ACTION_NONE, OBJECTIVE_INIT, OBJECTIVE_NONE};
+volatile State current_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ACTION_NONE, OBJECTIVE_INIT, OBJECTIVE_NONE};
 volatile Target target = {0.0, 0.0, 0.0};
 
 void set_current_coordinates(float x, float y) {
@@ -114,6 +114,18 @@ void set_current_acceleration(float acceleration) {
     */
     current_state.acceleration = acceleration;
 }
+
+void set_total_displacement(float total_displacement) {
+    /**
+     * Set the current total_displacement
+     * 
+     * @param total_displacement The current total_displacement
+     * 
+     * @return void
+    */
+    current_state.total_displacement = total_displacement;
+}
+
 
 void set_target_coordinates(float x, float y) {
     /**
@@ -238,6 +250,15 @@ float get_current_duty_cycle() {
     return current_state.duty_cycle;
 }
 
+float get_total_displacement() {
+    /**
+     * Get the current total_displacement
+     * 
+     * @return The current total_displacement
+    */
+    return current_state.total_displacement;
+}
+
 float get_current_speed() {
     /**
      * Get the current speed
@@ -296,14 +317,14 @@ void report_state_task(void *args) {
     while (1) {
         if (current_state.objective != OBJECTIVE_INIT) {
 
-            int max_length = snprintf(NULL, 0, "%f %f %f %d %f %f %f %f %f %d",
+            int max_length = snprintf(NULL, 0, "%f %f %f %d %f %f %f %f %f %d %f",
              current_state.x, current_state.y, current_state.rotation, current_state.action, current_state.roll,
-              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle, current_state.objective);
+              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle, current_state.objective, current_state.total_displacement);
 
             char message[max_length + 1]; 
-            snprintf(message, max_length + 1, "%f %f %f %d %f %f %f %f %f %d",
+            snprintf(message, max_length + 1, "%f %f %f %d %f %f %f %f %f %d %f",
              current_state.x, current_state.y, current_state.rotation, current_state.action, current_state.roll,
-              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle, current_state.objective);
+              current_state.pitch, current_state.speed, current_state.acceleration, current_state.duty_cycle, current_state.objective, current_state.total_displacement);
 
             mqtt_publish_message(*mqtt_client, message);
 

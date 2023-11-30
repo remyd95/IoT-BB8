@@ -490,6 +490,7 @@ class ControlPanel:
                         ball.speed = state_update['speed']
                         ball.acceleration = state_update['acceleration']
                         ball.duty_cycle = state_update['duty_cycle']
+                        ball.total_displacement = state_update['total_displacement']
                         imu_label = self.imu_labels[ball_name]
 
                         imu_label.config(
@@ -560,7 +561,7 @@ class ControlPanel:
                 logging.info(
                     f"[GUI] New state of {ball_name} is x={ball.x_pos}, y={ball.y_pos}, yaw={ball.rotation},"
                     f" pitch={ball.pitch}, roll={ball.roll}, {ball.action}, {ball.objective}, speed={ball.speed},"
-                    f" acceleration={ball.acceleration}, duty_cycle={ball.duty_cycle}")
+                    f" acceleration={ball.acceleration}, duty_cycle={ball.duty_cycle}, total_displacement={ball.total_displacement}")
                 return
 
     def register_ball(self, ball_id):
