@@ -22,7 +22,16 @@ int process_objective_switch(int previous_objective, int current_objective) {
         } else if (previous_objective == OBJECTIVE_TURN_LEFT || previous_objective == OBJECTIVE_TURN_RIGHT) {
             stop_turn_action(true);
             return 1;
+        } else if (previous_objective == OBJECTIVE_MOVETO) {
+            if (get_current_action() == ACTION_FORWARD) {
+                set_current_action(ACTION_STOP);
+                return 1;
+            } else if (get_current_action() == ACTION_TURN_LEFT || get_current_action() == ACTION_TURN_RIGHT) {
+                stop_turn_action(true);
+                return 1;
+            }
         }
+        
     }
     return 0;
 }
@@ -123,28 +132,31 @@ void process_objective(State state, Target target) {
         float angle_difference_abs = fabs(angle_difference);
         
         // Rotate until the angle difference is small enough
-        if (angle_difference_abs > ANGLE_OFFSET) {
-            if (state.action == ACTION_FORWARD) {
-                set_current_action(ACTION_STOP);
-                return;
-            }
-            if (angle_difference > 0.0) {
-                set_current_action(ACTION_TURN_LEFT);
-                return;
+        if(get_current_action() != ACTION_FORWARD) {
+            if (angle_difference_abs > ANGLE_OFFSET) {
+                if (angle_difference > 0.0) {
+                    set_current_action(ACTION_TURN_LEFT);
+                    return;
+                } else {
+                    set_current_action(ACTION_TURN_RIGHT);
+                    return;
+                }
             } else {
-                set_current_action(ACTION_TURN_RIGHT);
+                if (state.action == ACTION_TURN_LEFT || state.action == ACTION_TURN_RIGHT) {
+                    // TODO: Should be an action, fix this in the future
+                    stop_turn_action(true);
+                    return;
+                }
+                
+                // Angle to small enough the move forward!
+                set_current_action(ACTION_FORWARD);
                 return;
             }
         } else {
-            if (state.action == ACTION_TURN_LEFT || state.action == ACTION_TURN_RIGHT) {
-                // TODO: Should be an action, fix this in the future
-                stop_turn_action(true);
+            if (angle_difference_abs > ANGLE_OFFSET*2) {
+                set_current_action(ACTION_STOP);
                 return;
             }
-            
-            // Angle to small enough the move forward!
-            set_current_action(ACTION_FORWARD);
-            return;
         }
         return;
     }

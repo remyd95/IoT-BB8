@@ -145,10 +145,19 @@ void app_main() {
     float z_array[arraysize];
     int array_index = 0;
 
+    int tick_counter = 0;
+
+    bool xy_set = false;
+    float x = 0.0f;
+    float y = 0.0f;
+
+    
+
     // Main action loop starts here
-    int tot_disp = 0;
-    while (1) {
-        
+    float tot_disp = 0.0f;
+    float tot_disp_estimate = 0.0f;
+    float raw_displacements_until_standing_still = 0.0f;
+    while (1) {        
         // Get current state and target
         // State current_state = get_current_state();
         // Target target = get_target();
@@ -161,18 +170,25 @@ void app_main() {
 
         // Update the current state after processing the objective and action
         if (current_state.objective != OBJECTIVE_INIT) {
-            // float new_x = get_current_x_pos();
-            // float new_y = get_current_y_pos();
+            if(!xy_set){
+                x = get_current_x_pos();
+                y = get_current_y_pos();
+                xy_set = true;
+            }
 
             // set_current_coordinates(new_x, new_y);
-            set_current_rotation(imu_data.heading);
+            float rotation = imu_data.heading ;//- ticks*YAW_DRIFT_PER_TICK;
+            // if(rotation < 0.0f) rotation = rotation + 360.0f;
+            // if(rotation > 360.0f) rotation = rotation - 360.0f;
+            set_current_rotation(rotation);
             set_current_pitch(imu_data.pitch);
             set_current_roll(imu_data.roll);
 
             // Get the compensated acceleration from the IMU
             last_compensated_va = current_compensated_va;
             vector_t current_compensated_va = imu_data.compensated_va;
-            float total_displacement = 0.0f;
+            float displacement = 0.0f;
+            float total_displacement_estimate = 0.0f;
             
             if(imu_data.compensated_va.x + imu_data.compensated_va.y + imu_data.compensated_va.z > 0.2 || imu_data.compensated_va.x + imu_data.compensated_va.y + imu_data.compensated_va.z < -0.2){
             
@@ -192,27 +208,49 @@ void app_main() {
                 last_velocity.z = velocity_z;
 
                 // Calculate new coordinates based on current yaw and displacement
-                total_displacement = sqrt(pow(displacement_x, 2) + pow(displacement_y, 2) + pow(displacement_z, 2))*100;
-                total_displacement = (total_displacement - 111.88) / 9.58;
+                displacement = sqrt(pow(displacement_x, 2) + pow(displacement_y, 2) + pow(displacement_z, 2))*100;
+                // total_displacement = (total_displacement - 111.88) / 9.58;
+                total_displacement_estimate = powf((20.0f*displacement + 224.41)/108.44, 2.0f)/20.0f;
             }
             float current_rotation = get_current_rotation();
-            tot_disp = tot_disp + total_displacement;
-            // printf("Total displacement: %d\n", tot_disp);
+            if(get_current_action() == ACTION_BACKWARD || get_current_action() == ACTION_FORWARD || get_current_action() == ACTION_STOP){
+                tot_disp_estimate = tot_disp_estimate + total_displacement_estimate;
+                raw_displacements_until_standing_still = raw_displacements_until_standing_still + displacement;
+            
+                // printf("Total displacement: %d\n", tot_disp);
 
-            set_total_displacement(tot_disp);
+                set_total_displacement(tot_disp_estimate);
 
-            // printf("Current rotation: %f\n", current_rotation);
-            // printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
-            // // printf("RAD: %f\n", DEG2RAD(90.0f-current_rotation));
-            // printf("cos: %f, sin: %f\n", cos(degrees_to_radians(90.0f-current_rotation)), sin(degrees_to_radians(90.0f-current_rotation)));
-            // // printf("cos: %f, sin: %f\n", cos((90.0f-current_rotation)*(M_PI/180.0f)), sin((90.0f-current_rotation)*(M_PI/180.0f)));
+                // printf("Current rotation: %f\n", current_rotation);
+                // printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
+                // // printf("RAD: %f\n", DEG2RAD(90.0f-current_rotation));
+                // printf("cos: %f, sin: %f\n", cos(degrees_to_radians(90.0f-current_rotation)), sin(degrees_to_radians(90.0f-current_rotation)));
+                // // printf("cos: %f, sin: %f\n", cos((90.0f-current_rotation)*(M_PI/180.0f)), sin((90.0f-current_rotation)*(M_PI/180.0f)));
 
-            float new_x_pos = get_current_x_pos() + total_displacement * cos(degrees_to_radians(90.0f-current_rotation));
-            float new_y_pos = get_current_y_pos() + total_displacement * sin(degrees_to_radians(90.0f-current_rotation));
-            // printf("New coordinates: X: %f, Y: %f\n", new_x_pos, new_y_pos);
+                float new_x_pos = get_current_x_pos() + total_displacement_estimate * cos(degrees_to_radians(90.0f-current_rotation));
+                float new_y_pos = get_current_y_pos() + total_displacement_estimate * sin(degrees_to_radians(90.0f-current_rotation));
+                // printf("New coordinates: X: %f, Y: %f\n", new_x_pos, new_y_pos);
 
-            // Update the current coordinates
-            set_current_coordinates(new_x_pos, new_y_pos);
+                // Update the current coordinates
+                set_current_coordinates(new_x_pos, new_y_pos);
+            } else if(get_current_action() == ACTION_NONE && raw_displacements_until_standing_still >0.0f){
+                    printf("GOT HERE\n");
+                    float tot_disp_diff = powf((raw_displacements_until_standing_still + 224.41)/108.44, 2.0f);
+                    tot_disp = tot_disp + tot_disp_diff;
+                    tot_disp_estimate = tot_disp;
+                    set_total_displacement(tot_disp);
+
+                    float angle_from_last_pos = atan2(get_current_y_pos()-y, get_current_x_pos()-x);
+                    float new_x_pos = x + tot_disp_diff * cos(angle_from_last_pos);
+                    float new_y_pos = y + tot_disp_diff * sin(angle_from_last_pos);
+                    
+                    // Update the current coordinates
+                    set_current_coordinates(new_x_pos, new_y_pos);
+                    x = new_x_pos;
+                    y = new_y_pos;
+                    raw_displacements_until_standing_still = 0.0f;
+
+            }
 
             // Debug output
             // printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
@@ -248,6 +286,7 @@ void app_main() {
                 last_wakeup_time = current_time; 
             }
         }
+
 
         // Wait for the next decision interval
         vTaskDelay(DECISION_INTERVAL_TIME_MS / portTICK_PERIOD_MS);

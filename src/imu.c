@@ -37,8 +37,9 @@ calibration_t cal = {
     .accel_scale_lo = {.x = 1.000143, .y = 1.044014, .z = 0.957282},
     .accel_scale_hi = {.x = -0.989888, .y = -0.953421, .z = -1.042077},
     .gyro_bias_offset = {.x = 1.719505, .y = -0.868046, .z = -0.795749},
-    .mag_offset = {.x = -91.140625, .y = 46.921875, .z = -392.132812},
-    .mag_scale = {.x = 1.002172, .y = 1.085780, .z = 0.924924},
+    .mag_offset = {.x = -67.755859, .y = 64.367188, .z = -131.677734},
+    .mag_scale = {.x = 1.018539, .y = 1.046231, .z = 0.941274},
+
      };
 
 static void transform_accel_gyro(vector_t *v) {
@@ -119,7 +120,7 @@ static void run_imu(imu_data_t *imu_data) {
     // Apply the AHRS algorithm
     ahrs_update(0.5*degrees_to_radians(vg.x), 0.5*degrees_to_radians(vg.y), 0.5*degrees_to_radians(vg.z),
                 va.x, va.y, va.z,
-                0.0f, 0.0f, 0.0f);
+                vm.x, vm.y, vm.z);
 
     vector_t compensated_va;
     compensateGravity(va, &compensated_va);

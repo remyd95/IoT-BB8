@@ -19,12 +19,12 @@
 // Break behavior constants
 #define BRAKE_STEP_SIZE 3.0
 #define BRAKE_PULSE_DUTY_CYCLE_MULTIPLIER 1
-#define BRAKE_STEADY_PERIOD_MS 1000
+#define BRAKE_STEADY_PERIOD_MS 500
 #define BRAKE_PULSE_PERIOD_MS 200
 
 // Target constants
 #define TARGET_OFFSET 20
-#define ANGLE_OFFSET 10
+#define ANGLE_OFFSET 5
 
 // Define positional constants
 #define PITCH_STEADY_STATE 0

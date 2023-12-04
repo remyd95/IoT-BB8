@@ -25,10 +25,11 @@
 
 #define SAMPLE_FREQ_Hz 200.0f
 #define SAMPLE_INTERVAL_MS (1000 / SAMPLE_FREQ_Hz) // Sample Rate in milliseconds
-#define BETA 0.2f
+#define BETA 1.0f
 // #define DEG2RAD(deg) (deg * M_PI / 180.0f)
 
 #define GRAVITY 1.00f
+
 
 typedef struct {
     float temp;
