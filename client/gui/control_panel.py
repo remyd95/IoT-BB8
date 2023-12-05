@@ -56,9 +56,9 @@ class ControlPanel:
         self.selected_ball = None
 
         # Canvas & grid settings
-        self.canvas_size = 600
-        self.padding = 60
-        self.grid_steps = 30
+        self.canvas_size = 350
+        self.padding = 25
+        self.grid_steps = 14
         self.base = None
         self.canvas = None
 

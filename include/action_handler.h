@@ -11,7 +11,7 @@
 #define TURN_PULSE_MS 75
 #define TURN_INTERVAL_MS 50
 #define TURN_STEP_SIZE 100.0
-#define TURN_DUTY_CYCLE 20
+#define TURN_DUTY_CYCLE 35
 
 // Move constants
 #define ACCEL_STEP_SIZE 100.0

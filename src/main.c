@@ -216,7 +216,7 @@ void app_main() {
             if(get_current_action() == ACTION_BACKWARD || get_current_action() == ACTION_FORWARD || get_current_action() == ACTION_STOP){
                 tot_disp_estimate = tot_disp_estimate + total_displacement_estimate;
                 raw_displacements_until_standing_still = raw_displacements_until_standing_still + displacement;
-            
+             
                 // printf("Total displacement: %d\n", tot_disp);
 
                 set_total_displacement(tot_disp_estimate);
@@ -233,24 +233,25 @@ void app_main() {
 
                 // Update the current coordinates
                 set_current_coordinates(new_x_pos, new_y_pos);
-            } else if(get_current_action() == ACTION_NONE && raw_displacements_until_standing_still >0.0f){
-                    printf("GOT HERE\n");
-                    float tot_disp_diff = powf((raw_displacements_until_standing_still + 224.41)/108.44, 2.0f);
-                    tot_disp = tot_disp + tot_disp_diff;
-                    tot_disp_estimate = tot_disp;
-                    set_total_displacement(tot_disp);
+            } 
+            // else if(get_current_action() == ACTION_NONE && raw_displacements_until_standing_still >0.0f){
+            //         printf("GOT HERE\n");
+            //         float tot_disp_diff = powf((raw_displacements_until_standing_still + 224.41)/108.44, 2.0f);
+            //         tot_disp = tot_disp + tot_disp_diff;
+            //         tot_disp_estimate = tot_disp;
+            //         set_total_displacement(tot_disp);
 
-                    float angle_from_last_pos = atan2(get_current_y_pos()-y, get_current_x_pos()-x);
-                    float new_x_pos = x + tot_disp_diff * cos(angle_from_last_pos);
-                    float new_y_pos = y + tot_disp_diff * sin(angle_from_last_pos);
+            //         float angle_from_last_pos = atan2(get_current_y_pos()-y, get_current_x_pos()-x);
+            //         float new_x_pos = x + tot_disp_diff * cos(angle_from_last_pos);
+            //         float new_y_pos = y + tot_disp_diff * sin(angle_from_last_pos);
                     
-                    // Update the current coordinates
-                    set_current_coordinates(new_x_pos, new_y_pos);
-                    x = new_x_pos;
-                    y = new_y_pos;
-                    raw_displacements_until_standing_still = 0.0f;
+            //         // Update the current coordinates
+            //         set_current_coordinates(new_x_pos, new_y_pos);
+            //         x = new_x_pos;
+            //         y = new_y_pos;
+            //         raw_displacements_until_standing_still = 0.0f;
 
-            }
+            // }
 
             // Debug output
             // printf("Current coordinates: X: %f, Y: %f\n", get_current_x_pos(), get_current_y_pos());
